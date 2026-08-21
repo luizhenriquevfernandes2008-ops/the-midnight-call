@@ -117,11 +117,25 @@ export class Jogador {
     const c = this.caixa;
 
     if (this._solidoNaCaixa(mapa, c.x0, c.y0, c.x1, c.y1)) {
+      // ENCAIXE EXATO, não passo a passo. Empurrar de 1 em 1 pixel até sair
+      // deixa a personagem parando entre 0 e 1 pixel ACIMA do chão; na volta
+      // a gravidade puxa de novo, e ela vibra um pixel para sempre. Isso
+      // fazia a linha de tile dos pés alternar entre duas, o que quebra
+      // qualquer lógica que pergunte "em que altura eu estou".
+      if (dy > 0) {
+        const tyBateu = Math.floor((this.y - 0.001) / T);
+        this.y = tyBateu * T;
+      } else {
+        const tyBateu = Math.floor((this.y - ALT) / T);
+        this.y = (tyBateu + 1) * T + ALT;
+      }
+      // Se por algum motivo ainda encostar (quina apertada), desencalha no
+      // braço: um pixel por vez, como antes.
       const passo = dy > 0 ? -1 : 1;
       for (let i = 0; i < Math.ceil(Math.abs(dy)) + 2; i++) {
-        this.y += passo;
         const c2 = this.caixa;
         if (!this._solidoNaCaixa(mapa, c2.x0, c2.y0, c2.x1, c2.y1)) break;
+        this.y += passo;
       }
       if (dy > 0) {
         this._aterrissar();

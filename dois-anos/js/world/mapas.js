@@ -130,6 +130,10 @@ class Construtor {
 //   VÃO MÁXIMO = 4 TILES no plano, 3 se ainda estiver subindo.
 //   CARTA fica no máximo 2 tiles acima de algum lugar onde dê pra pisar.
 //     Memória inalcançável é pior do que memória nenhuma.
+//   BICHO DE CHÃO fica a pelo menos 2 tiles da beirada. Um esbarrão atordoa
+//     por meio segundo, e meio segundo andando é o bastante para ela sair
+//     andando do penhasco sem poder fazer nada. Levar um coração por uma
+//     escolha ruim é justo; levar por uma que ela não pôde tomar, não.
 // ---------------------------------------------------------------------------
 
 // ---------------------------------------------------------------------------
@@ -299,7 +303,7 @@ function faseFloresta() {
   c.chao(142, 158, CH - 1);
   c.checkpoint(144, CH - 1);
   c.mola(150, CH - 2);
-  c.inimigo(154, CH - 1, 'sombra', 4);
+  c.inimigo(151, CH - 1, 'sombra', 3);
   c.plat(148, CH - 8, 5);
   c.trilha(149, CH - 10, 4);
 
@@ -470,7 +474,7 @@ function faseCeu() {
   ilha(74, 88, B - 24);
   c.checkpoint(76, B - 24);
   c.enfeite('passarinho', 80, B - 28);
-  c.inimigo(83, B - 24, 'nuvenzinha', 5);
+  c.inimigo(82, B - 24, 'nuvenzinha', 4);
   c.movel(90, B - 24, 3, 0, 4, 30);
   c.plat(96, B - 26, 4);
   c.trilha(91, B - 26, 3);
@@ -483,7 +487,7 @@ function faseCeu() {
   c.checkpoint(125, B - 32);
   c.plat(128, B - 34, 4);
   c.carta(130, B - 36);
-  c.inimigo(132, B - 32, 'nuvenzinha', 4);
+  c.inimigo(131, B - 32, 'nuvenzinha', 3);
   c.enfeite('balao', 127, B - 36);
 
   // o terraço da lua
