@@ -1,0 +1,50 @@
+========================================================
+  D O I S   A N O S
+========================================================
+
+COMO JOGAR
+  Clique duas vezes em   JOGO_OFFLINE.html
+  Só isso. Não precisa instalar nada, não precisa de internet.
+
+CONTROLES
+  setas ou A/D ....... andar
+  espaço ou Z ........ pular  (segurar = pulo mais alto)
+  shift ou X ......... correr
+  seta pra baixo ..... agachar
+  TAB ................ álbum das memórias
+  ESC ................ pausa
+  enter .............. confirmar / passar fala
+
+  Também funciona com controle de videogame.
+
+O QUE FAZER
+  Ela é a personagem. Ele sumiu, em pedaços, espalhado por quatro
+  mundos. No fim de cada mundo tem uma bolha de luz com um pedaço
+  dele dentro. Encoste nela.
+
+  Pelo caminho tem cartas. Cada carta é uma memória de vocês dois.
+  Pegar todas não é obrigatório — mas o álbum fica bonito cheio.
+
+  Não dá pra perder o jogo. Cair na água ou levar um esbarrão custa
+  um coração e devolve você pro último ponto salvo. Só isso.
+
+PRA DEIXAR ELA COM A CARA DELA
+  No menu, "COMO ELA É".
+  Dezoito campos: cabelo, franja, tom de pele, cor dos olhos, sardas,
+  óculos, roupa, altura. Vá mexendo olhando na tela até bater.
+  TAB troca pra editar ele. R sorteia. Enter salva.
+  O que você salvar ali vale pro jogo inteiro e não se perde.
+
+PRA TROCAR OS TEXTOS
+  Abra   js/dados/personalizacao.js   num editor de texto qualquer.
+  Lá dentro estão os nomes, a data, as dezesseis memórias, o que os
+  dois dizem em cada resgate e a carta do final. Troque o que quiser
+  entre aspas, salve, e rode:
+
+      python ferramentas/gerar_offline.py
+
+  para o JOGO_OFFLINE.html sair atualizado.
+
+SE ALGUMA COISA QUEBRAR
+  Aparece uma tela preta com o erro e um botão COPIAR ERRO.
+  Clique nele e cole o texto no chat.

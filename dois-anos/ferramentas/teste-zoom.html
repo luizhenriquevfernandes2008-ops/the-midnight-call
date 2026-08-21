@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="pt-BR"><head><meta charset="utf-8"><title>zoom</title>
+<style>body{background:#7fb8e8;margin:0}canvas{image-rendering:pixelated;display:block}</style>
+</head><body><canvas id="a" width="1300" height="820"></canvas>
+<script type="module">
+import { Boneco } from '../js/art/rig.js';
+import { APARENCIA_PADRAO } from '../js/dados/personalizacao.js';
+const c=document.getElementById('a'), x=c.getContext('2d');
+x.imageSmoothingEnabled=false;
+x.fillStyle='#7fb8e8';x.fillRect(0,0,c.width,c.height);
+function um(look,px,py,esc,anim,t,rot){
+  const b=new Boneco(look); b.tocar(anim,true); b.t=t; b.misturaT=0; b.atualizar(0.0001,{}); b.t=t; b.atualizar(0.0001,{});
+  x.save();x.translate(px,py);x.scale(esc,esc);b.desenhar(x,0,0,1);x.restore();
+  x.fillStyle='#12203a';x.font='13px monospace';x.fillText(rot,px-40,py+16);
+}
+function cabecao(look,px,py,esc,rot){
+  const b=new Boneco(look);
+  x.save();x.translate(px,py);x.scale(esc,esc);b.desenharCabeca(x,0,0,1);x.restore();
+  x.fillStyle='#12203a';x.font='13px monospace';x.fillText(rot,px-70,py+26);
+}
+const B={...APARENCIA_PADRAO};
+um(B,80,400,8,'parada',0.2,'parada');
+um(B,260,400,8,'andando',0.0,'andando');
+um({...B,cabeloEstilo:5,roupa:0},440,400,8,'parada',0.2,'rabo');
+um({...B,cabeloEstilo:7,roupa:2},620,400,8,'parada',0.2,'tranca');
+um({...B,cabeloEstilo:6,roupa:3},800,400,8,'parada',0.2,'coque');
+um({...B,cabeloEstilo:4,pele:5,cabeloCor:0},980,400,8,'correndo',0.0,'cacheado');
+um({...B,cabeloEstilo:1,pele:0,cabeloCor:4},1160,400,8,'pulando',1,'chanel');
+cabecao(B,120,700,13,'longo/franja reta');
+cabecao({...B,franja:0,blush:1},400,700,13,'sem franja');
+cabecao({...B,oculos:1,franja:2,brinco:1},680,700,13,'oculos+brinco');
+cabecao({...B,cabeloEstilo:0,franja:3,olhoForma:2,sardas:1,cabeloCor:6},960,700,13,'sardas');
+</script></body></html>

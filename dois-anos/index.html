@@ -1,0 +1,134 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Dois Anos</title>
+<link rel="stylesheet" href="css/estilo.css">
+</head>
+<body>
+  <div id="palco">
+    <canvas id="jogo" width="480" height="270"></canvas>
+  </div>
+
+  <div id="boot">
+    <div class="boot-dentro">
+      <div class="boot-coracao"></div>
+      <p class="boot-msg" id="boot-msg">carregando&#8230;</p>
+      <p class="boot-antes" id="boot-antes" hidden>ver o último erro</p>
+    </div>
+  </div>
+
+  <div id="crash" hidden>
+    <div class="crash-dentro">
+      <p class="crash-titulo">O jogo travou.</p>
+      <pre id="crash-msg"></pre>
+      <div class="crash-acoes">
+        <button id="crash-copiar" type="button">COPIAR ERRO</button>
+        <button id="crash-recarregar" type="button">RECARREGAR</button>
+        <span id="crash-copiado"></span>
+      </div>
+      <p class="crash-dica">Clica em COPIAR ERRO e cola no chat. É esse texto que diz o que quebrou.</p>
+    </div>
+  </div>
+
+  <script>
+    // Rede de segurança. Um módulo que explode em silêncio deixa a tela
+    // preta e sem pista nenhuma; aqui o erro vira texto que dá pra copiar
+    // com um clique. Vale mais do que qualquer descrição do que se viu.
+    (function () {
+      var CHAVE = 'doisanos.ultimoErro';
+
+      function ambiente() {
+        var g = window.jogo;
+        var l = [
+          'navegador: ' + navigator.userAgent,
+          'tela: ' + window.innerWidth + 'x' + window.innerHeight +
+            ' dpr' + (window.devicePixelRatio || 1),
+          'url: ' + location.href,
+        ];
+        if (g) {
+          l.push('estado: ' + g.estado + '  fps: ' + (g.fps ? g.fps.toFixed(0) : '-'));
+          if (g.nivel && g.nivel.jogador) {
+            l.push('fase: ' + g.nivel.numero +
+              '  x=' + Math.round(g.nivel.jogador.x) +
+              '  y=' + Math.round(g.nivel.jogador.y));
+          }
+        } else {
+          l.push('estado: o jogo nem chegou a carregar');
+          var b = document.getElementById('boot-msg');
+          if (b) l.push('parou em: "' + b.textContent + '"');
+        }
+        return l.join('\n');
+      }
+
+      function mostrar(titulo, detalhe) {
+        var box = document.getElementById('crash');
+        var msg = document.getElementById('crash-msg');
+        if (!box || box.hidden === false) return;
+        var t = titulo + '\n\n' + detalhe + '\n\n--- ambiente ---\n' + ambiente();
+        box.hidden = false;
+        msg.textContent = t;
+        try { localStorage.setItem(CHAVE, t); } catch (e) { /* sem espaço */ }
+      }
+      window.__crash = mostrar;
+
+      window.addEventListener('error', function (e) {
+        mostrar(e.message || 'erro desconhecido',
+          (e.filename || '') + ':' + (e.lineno || 0) + ':' + (e.colno || 0) + '\n\n' +
+          (e.error && e.error.stack ? e.error.stack : '(sem pilha)'));
+      });
+      window.addEventListener('unhandledrejection', function (e) {
+        var r = e.reason;
+        mostrar('Promise rejeitada', (r && r.stack) ? r.stack : String(r));
+      });
+
+      document.addEventListener('DOMContentLoaded', function () {
+        document.getElementById('crash-copiar').addEventListener('click', function () {
+          var t = document.getElementById('crash-msg').textContent;
+          var aviso = document.getElementById('crash-copiado');
+          function ok() { aviso.textContent = 'copiado'; }
+          function reserva() {
+            var ta = document.createElement('textarea');
+            ta.value = t; document.body.appendChild(ta); ta.select();
+            try { document.execCommand('copy'); ok(); }
+            catch (e) { aviso.textContent = 'seleciona o texto e copia à mão'; }
+            document.body.removeChild(ta);
+          }
+          if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(t).then(ok, reserva);
+          } else reserva();
+        });
+        document.getElementById('crash-recarregar').addEventListener('click', function () {
+          location.reload();
+        });
+
+        var antes = null;
+        try { antes = localStorage.getItem(CHAVE); } catch (e) { /* sem acesso */ }
+        if (antes) {
+          var link = document.getElementById('boot-antes');
+          link.hidden = false;
+          link.addEventListener('click', function () {
+            document.getElementById('crash').hidden = false;
+            document.getElementById('crash-msg').textContent = antes;
+          });
+        }
+
+        // Vigia do carregamento: um módulo que não chega não dispara erro
+        // nenhum, e a tela fica pulsando "carregando..." para sempre.
+        setTimeout(function () {
+          var g = window.jogo;
+          if (g && g.estado && g.estado !== 'boot') return;
+          var p = (document.getElementById('boot-msg') || {}).textContent || '?';
+          mostrar('O jogo não terminou de carregar', g
+            ? 'Os módulos carregaram, mas a montagem não terminou.\nParou em: "' + p + '"'
+            : 'Os módulos JavaScript não carregaram.\n\n' +
+              'Causa quase certa: a página foi aberta sem servidor local.\n' +
+              'Use o JOGO_OFFLINE.html, que abre com dois cliques.');
+        }, 15000);
+      });
+    })();
+  </script>
+  <script type="module" src="js/main.js"></script>
+</body>
+</html>

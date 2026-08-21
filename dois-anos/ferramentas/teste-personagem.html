@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="pt-BR"><head><meta charset="utf-8"><title>teste do rig</title>
+<style>
+  body { background:#5b8fd6; margin:0; font-family:monospace; color:#fff; }
+  canvas { image-rendering: pixelated; display:block; margin:0; }
+  .rot { padding:6px 10px; font-size:12px; opacity:.85 }
+</style></head><body>
+<div class="rot" id="rot">carregando</div>
+<canvas id="alvo" width="1200" height="1000"></canvas>
+<script type="module">
+import { Boneco } from '../js/art/rig.js';
+import { APARENCIA_PADRAO } from '../js/dados/personalizacao.js';
+
+const c = document.getElementById('alvo');
+const x = c.getContext('2d');
+x.imageSmoothingEnabled = false;
+
+function painel(look, px, py, esc, anims, rotulo) {
+  const b = new Boneco(look);
+  x.save();
+  x.translate(px, py);
+  x.scale(esc, esc);
+  let dx = 0;
+  for (const a of anims) {
+    b.tocar(a.n, true);
+    b.t = a.t === undefined ? 0.3 : a.t;
+    b.misturaT = 0;
+    b.atualizar(0.0001, {});
+    b.t = a.t === undefined ? 0.3 : a.t;
+    b.pose = b.pose;
+    // reamostra na fração pedida
+    b.t = a.t === undefined ? 0.3 : a.t;
+    b.atualizar(0.0001, {});
+    b.desenhar(x, dx + 26, 50, a.f || 1);
+    dx += 52;
+  }
+  x.restore();
+  x.fillStyle = '#fff'; x.font = '12px monospace';
+  x.fillText(rotulo, px, py - 4);
+}
+
+function retratos(look, px, py, esc, campo, n, rotulo) {
+  x.fillStyle = '#fff'; x.font = '12px monospace';
+  x.fillText(rotulo, px, py - 4);
+  for (let i = 0; i < n; i++) {
+    const l = { ...look, [campo]: i };
+    const b = new Boneco(l);
+    b.desenharCabeca(x, px + i * 26 * esc + 12 * esc, py + 30 * esc, esc);
+    x.fillStyle = '#fff'; x.font = '10px monospace';
+    x.fillText(String(i), px + i * 26 * esc + 10 * esc, py + 36 * esc);
+  }
+}
+
+const base = { ...APARENCIA_PADRAO };
+const A = [
+  { n: 'parada', t: 0.2 }, { n: 'andando', t: 0.0 }, { n: 'andando', t: 0.25 },
+  { n: 'andando', t: 0.5 }, { n: 'andando', t: 0.75 },
+  { n: 'correndo', t: 0.0 }, { n: 'correndo', t: 0.25 },
+  { n: 'pulando', t: 1 }, { n: 'caindo', t: 1 }, { n: 'agachada', t: 1 },
+  { n: 'comemorando', t: 0.5 }, { n: 'parada', t: 0.2, f: -1 },
+];
+
+x.fillStyle = '#5b8fd6'; x.fillRect(0, 0, c.width, c.height);
+painel(base, 10, 30, 4, A, 'ela — vestido, cabelo longo');
+painel({ ...base, cabeloEstilo: 5, roupa: 0, corCima: 9, corBaixo: 7, franja: 2 },
+  10, 250, 4, A, 'rabo de cavalo, camiseta e shorts');
+painel({ ...base, cabeloEstilo: 4, roupa: 2, cabeloCor: 6, pele: 5, corCima: 0, corBaixo: 1 },
+  10, 470, 4, A, 'cacheado, blusa e calca, pele escura');
+
+retratos(base, 10, 700, 3, 'cabeloEstilo', 8, 'estilos de cabelo');
+retratos(base, 10, 830, 3, 'pele', 7, 'tons de pele');
+retratos(base, 640, 700, 3, 'franja', 4, 'franjas');
+retratos(base, 640, 830, 3, 'oculos', 4, 'oculos');
+document.getElementById('rot').textContent = 'pronto';
+</script></body></html>

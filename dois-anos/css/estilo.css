@@ -1,0 +1,135 @@
+/* estilo.css — só a moldura. Tudo que é jogo acontece dentro do canvas. */
+
+html, body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  background: #12101c;
+  overflow: hidden;
+  font-family: "Trebuchet MS", Verdana, sans-serif;
+  color: #fff6e6;
+  /* Seleção de texto num jogo só serve para o jogador arrastar sem querer
+     e ver a tela inteira ficar azul. */
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+#palco {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background:
+    radial-gradient(ellipse at 50% 40%, #2a2140 0%, #12101c 70%);
+}
+
+#jogo {
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+  display: block;
+  /* A sombra faz a tela do jogo parecer um objeto pousado no fundo, e não
+     um buraco recortado nele. */
+  box-shadow: 0 0 0 2px #3b2b4a, 0 18px 60px rgba(0, 0, 0, 0.6);
+  cursor: none;
+}
+
+/* ---- tela de carregamento ---- */
+#boot {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #12101c;
+  z-index: 20;
+  transition: opacity 0.6s ease;
+}
+#boot.sumindo { opacity: 0; pointer-events: none; }
+.boot-dentro { text-align: center; }
+
+/* coração em pixels, feito só de sombras — sem imagem, sem fonte */
+.boot-coracao {
+  width: 8px; height: 8px;
+  margin: 0 auto 22px;
+  background: transparent;
+  box-shadow:
+     8px  0    0 0 #ff5a7a,  16px  0   0 0 #ff5a7a,
+    32px  0    0 0 #ff5a7a,  40px  0   0 0 #ff5a7a,
+     0    8px  0 0 #ff5a7a,   8px  8px 0 0 #ff9db1, 16px 8px 0 0 #ff5a7a,
+    24px  8px  0 0 #ff5a7a,  32px  8px 0 0 #ff5a7a, 40px 8px 0 0 #ff5a7a,
+    48px  8px  0 0 #ff5a7a,
+     0   16px  0 0 #ff5a7a,   8px 16px 0 0 #ff9db1, 16px 16px 0 0 #ff5a7a,
+    24px 16px  0 0 #ff5a7a,  32px 16px 0 0 #ff5a7a, 40px 16px 0 0 #ff5a7a,
+    48px 16px  0 0 #ff5a7a,
+     8px 24px  0 0 #ff5a7a,  16px 24px 0 0 #ff5a7a, 24px 24px 0 0 #ff5a7a,
+    32px 24px  0 0 #ff5a7a,  40px 24px 0 0 #ff5a7a,
+    16px 32px  0 0 #ff5a7a,  24px 32px 0 0 #ff5a7a, 32px 32px 0 0 #ff5a7a,
+    24px 40px  0 0 #ff5a7a;
+  animation: bate 1.4s ease-in-out infinite;
+  transform-origin: 24px 20px;
+}
+@keyframes bate {
+  0%, 100% { transform: scale(1); }
+  14% { transform: scale(1.16); }
+  28% { transform: scale(1); }
+  42% { transform: scale(1.1); }
+}
+
+.boot-msg {
+  margin: 34px 0 0;
+  font-size: 13px;
+  letter-spacing: 0.14em;
+  color: #c3aec0;
+  text-transform: lowercase;
+}
+.boot-antes {
+  margin-top: 14px;
+  font-size: 11px;
+  color: #7d6a84;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+/* ---- tela de erro ---- */
+/* O atributo hidden vale menos que uma regra de id: sem esta linha o
+   painel de erro fica visível o tempo todo, por cima do jogo. */
+#crash[hidden] { display: none !important; }
+
+#crash {
+  position: fixed;
+  inset: 0;
+  background: rgba(12, 8, 18, 0.96);
+  z-index: 30;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  box-sizing: border-box;
+}
+.crash-dentro { max-width: 780px; width: 100%; }
+.crash-titulo { font-size: 20px; color: #ff6b6b; margin: 0 0 12px; }
+#crash-msg {
+  background: #1c1524;
+  border: 1px solid #3b2b4a;
+  padding: 12px;
+  max-height: 46vh;
+  overflow: auto;
+  font-size: 12px;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  color: #d8cfe0;
+}
+.crash-acoes { margin-top: 14px; display: flex; gap: 10px; align-items: center; }
+.crash-acoes button {
+  background: #3b2b4a;
+  border: 1px solid #ffd98a;
+  color: #fff6e6;
+  padding: 8px 16px;
+  font-size: 12px;
+  letter-spacing: 0.1em;
+  cursor: pointer;
+}
+.crash-acoes button:hover { background: #5a3f6e; }
+#crash-copiado { font-size: 12px; color: #9fe08a; }
+.crash-dica { font-size: 12px; color: #9c8ea4; margin-top: 12px; }
