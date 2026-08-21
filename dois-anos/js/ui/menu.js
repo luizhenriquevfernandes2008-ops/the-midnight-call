@@ -6,9 +6,9 @@
 // praia ao pôr do sol, com o nome dela na tela.
 
 import { VW, VH, clamp, lerp, easeOut, easeBack } from '../core/gfx.js';
-import { ret, disco, coracao, degradeV } from '../art/pixel.js';
+import { ret, coracao } from '../art/pixel.js';
 import { COR } from '../art/paleta.js';
-import { text, medir } from '../core/text.js';
+import { text } from '../core/text.js';
 import { audio } from '../core/audio.js';
 import { NOMES, DATAS } from '../dados/personalizacao.js';
 import { caixa } from '../systems/dialogo.js';

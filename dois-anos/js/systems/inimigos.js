@@ -12,7 +12,6 @@ import { clamp } from '../core/gfx.js';
 import { spriteBicho } from '../art/bichos.js';
 import { desenhar } from '../art/pixel.js';
 import { T } from '../world/tiles.js';
-import { audio } from '../core/audio.js';
 
 const PERFIS = {
   caranguejo:  { vel: 34, tipo: 'chao',  larg: 12, alt: 10, quadro: 0.22 },

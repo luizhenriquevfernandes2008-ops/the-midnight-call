@@ -9,13 +9,12 @@
 // Regra de desenho respeitada em todo estado: mundo primeiro, LUZ no meio,
 // interface por último.
 
-import { VW, VH, gfx, clamp, lerp, easeOut } from './core/gfx.js';
+import { gfx, clamp } from './core/gfx.js';
 import { input } from './core/input.js';
 import { audio } from './core/audio.js';
-import { save, formatarTempo } from './core/save.js';
-import { text, limparCacheTexto } from './core/text.js';
-import { ret, coracao } from './art/pixel.js';
-import { COR } from './art/paleta.js';
+import { save } from './core/save.js';
+import { text } from './core/text.js';
+import { ret } from './art/pixel.js';
 import { Boneco } from './art/rig.js';
 import { Fundo } from './world/ceu.js';
 import { TEMAS } from './world/temas.js';
@@ -26,8 +25,7 @@ import { Editor } from './ui/editor.js';
 import { Album } from './ui/album.js';
 import { Pausa } from './ui/pausa.js';
 import { Hud } from './ui/hud.js';
-import { APARENCIA_PADRAO, APARENCIA_ELE_PADRAO, MEMORIAS, NOMES }
-  from './dados/personalizacao.js';
+import { APARENCIA_PADRAO, APARENCIA_ELE_PADRAO, MEMORIAS } from './dados/personalizacao.js';
 import { NUM_FASES } from './world/mapas.js';
 
 function quadro() { return new Promise(r => requestAnimationFrame(() => r())); }
@@ -116,6 +114,7 @@ class Jogo {
     if (para === 'jogo') {
       this.nivel = new Nivel(dados.fase, this.aparencia, this.progresso);
       this.nivel.hud = this.hud;
+      this.nivel.mostrarDicas = this.opcoes.mostrarDicas !== false;
       this.faseAtual = dados.fase;
       audio.tocarMusica(this.nivel.tema.musica);
     } else if (para === 'menu') {

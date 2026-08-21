@@ -1,6 +1,6 @@
 // pausa.js — o menu que aparece com ESC.
 
-import { VW, VH, clamp } from '../core/gfx.js';
+import { VW, VH } from '../core/gfx.js';
 import { ret, coracao } from '../art/pixel.js';
 import { COR } from '../art/paleta.js';
 import { text } from '../core/text.js';

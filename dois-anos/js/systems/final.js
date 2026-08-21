@@ -12,7 +12,7 @@
 import { VW, VH, clamp, lerp, easeOut, easeInOut } from '../core/gfx.js';
 import { ret, disco, coracao, degradeV } from '../art/pixel.js';
 import { COR } from '../art/paleta.js';
-import { text, medir } from '../core/text.js';
+import { text } from '../core/text.js';
 import { audio } from '../core/audio.js';
 import { CARTA_FINAL, NOMES, DATAS, MEMORIAS } from '../dados/personalizacao.js';
 

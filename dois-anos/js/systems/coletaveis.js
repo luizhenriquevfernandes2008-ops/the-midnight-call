@@ -7,11 +7,10 @@
 // tem sombra no chão? Não — tem BRILHO. A flutuação diz "isto é item, não é
 // cenário", e é o que separa uma moeda de um tijolo amarelo.
 
-import { clamp, lerp } from '../core/gfx.js';
+import { clamp } from '../core/gfx.js';
 import { ret, disco, coracao, aro } from '../art/pixel.js';
 import { COR } from '../art/paleta.js';
 import { T, FRAGIL } from '../world/tiles.js';
-import { text } from '../core/text.js';
 import { audio } from '../core/audio.js';
 
 export class Item {

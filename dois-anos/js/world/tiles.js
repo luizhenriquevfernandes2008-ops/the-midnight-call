@@ -11,7 +11,7 @@
 // desenha superfície onde tem ar em cima, quina onde tem ar do lado. É o
 // que evita ter que autorar 47 variações de canto à mão.
 
-import { makeBuffer, mulberry32, clamp } from '../core/gfx.js';
+import { makeBuffer, mulberry32 } from '../core/gfx.js';
 import { ret, granular, linha, disco } from '../art/pixel.js';
 
 export const T = 16;
@@ -101,9 +101,20 @@ function tileSolido(x, mapa, tx, ty, tema) {
   // Nuvem tem que ser fofa dos QUATRO lados, senão vira laje branca com
   // chapéu de algodão.
   if (nuvem) {
-    if (arEsq) { disco(x, px + 2, py + 5, 4, te.corpo[0]); disco(x, px + 2, py + 12, 3, te.corpo[0]); }
-    if (arDir) { disco(x, px + T - 3, py + 5, 4, te.corpo[0]); disco(x, px + T - 3, py + 12, 3, te.corpo[0]); }
-    if (arBaixo) { disco(x, px + 4, py + T - 3, 4, te.corpo[0]); disco(x, px + 12, py + T - 3, 4, te.corpo[0]); }
+    const C = te.corpo[0];
+    if (arEsq) {
+      disco(x, px + 3, py + 4, 5, C); disco(x, px + 2, py + 11, 4, C);
+      ret(x, px, py + 2, 4, 12, C);
+    }
+    if (arDir) {
+      disco(x, px + T - 4, py + 4, 5, C); disco(x, px + T - 3, py + 11, 4, C);
+      ret(x, px + T - 4, py + 2, 4, 12, C);
+    }
+    if (arBaixo) {
+      disco(x, px + 4, py + T - 4, 5, C); disco(x, px + 12, py + T - 4, 5, C);
+      ret(x, px, py + T - 8, T, 5, C);
+      ret(x, px + 2, py + T - 2, T - 4, 1, te.topoDk);
+    }
   }
 
   if (arCima) superficie(x, px, py, te, tema.superficie, rnd, semente(tx, ty));
@@ -160,6 +171,17 @@ function superficie(x, px, py, te, estilo, rnd, sem) {
 function tilePlataforma(x, tx, ty, tema) {
   const px = tx * T, py = ty * T;
   const p = tema.plataforma;
+  if (tema.superficie === 'nuvem') {
+    // No céu, plataforma de uma via é uma nuvenzinha achatada. Tábua de
+    // madeira flutuando no espaço não convence ninguém.
+    const t = tema.terra;
+    ret(x, px, py + 2, T, 4, t.topo[0]);
+    disco(x, px + 4, py + 3, 4, t.topo[0]);
+    disco(x, px + 12, py + 3, 4, t.topo[0]);
+    ret(x, px, py + 1, T, 1, '#ffffff');
+    ret(x, px + 1, py + 6, T - 2, 1, t.topoDk);
+    return;
+  }
   // A plataforma tem 6 pixels de altura e fica colada no TOPO do tile: é
   // ali que o pé encosta, e desenhar ela no meio deixa o personagem
   // flutuando visualmente.
@@ -243,15 +265,4 @@ export function desenharAgua(ctx, mapa, tema, camX, camY, tempo) {
       }
     }
   }
-}
-
-export function desenharFragil(ctx, tile, camX, camY, tema) {
-  const px = Math.round(tile.x - camX), py = Math.round(tile.y - camY);
-  const a = tile.vida > 0 ? 1 : 0;
-  if (!a) return;
-  const tr = tema.plataforma;
-  const tremor = tile.tocado > 0 ? Math.round(Math.sin(tile.tocado * 40) * 1) : 0;
-  ret(ctx, px + tremor, py, T, 6, tr.madeiraHi);
-  ret(ctx, px + tremor, py + 4, T, 3, tr.madeira);
-  ret(ctx, px + tremor, py + 6, T, 1, tr.madeiraDk);
 }

@@ -10,8 +10,7 @@
 // floresta só trocando a paleta.
 
 import { makeBuffer, mulberry32, mixHex } from '../core/gfx.js';
-import { ret, disco, linha, granular } from '../art/pixel.js';
-import { COR } from '../art/paleta.js';
+import { ret, disco, linha } from '../art/pixel.js';
 
 const cache = new Map();
 

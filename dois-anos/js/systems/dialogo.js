@@ -7,10 +7,10 @@
 //            texto tem cara de papel — porque é o conteúdo pelo qual o
 //            jogo inteiro existe, e ele não pode passar como legenda.
 
-import { VW, VH, clamp, lerp, easeBack, easeOut } from '../core/gfx.js';
-import { ret, disco, coracao } from '../art/pixel.js';
+import { VW, VH, clamp, easeBack, easeOut } from '../core/gfx.js';
+import { ret, coracao } from '../art/pixel.js';
 import { COR } from '../art/paleta.js';
-import { text, quebrar, medir } from '../core/text.js';
+import { text, quebrar } from '../core/text.js';
 import { audio } from '../core/audio.js';
 
 const VEL_LETRA = 42;    // caracteres por segundo

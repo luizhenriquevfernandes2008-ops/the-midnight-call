@@ -13,7 +13,7 @@
 // Uma silhueta preta lá no fundo mata as duas e o desenho vira adesivo.
 
 import { makeBuffer, mulberry32, VW, VH, mixHex, clamp } from '../core/gfx.js';
-import { ret, degradeV, disco, granular, linha } from '../art/pixel.js';
+import { ret, degradeV, disco } from '../art/pixel.js';
 
 // ---------------------------------------------------------------------------
 // céu

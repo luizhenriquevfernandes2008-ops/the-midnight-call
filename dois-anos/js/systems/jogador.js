@@ -16,8 +16,8 @@
 // A colisão resolve X e Y em passos SEPARADOS. Resolver junto faz a
 // personagem grudar em quina e escalar parede sozinha.
 
-import { clamp, lerp } from '../core/gfx.js';
-import { T, SOLIDO, PLATAFORMA, ESPINHO, AGUA, FRAGIL } from '../world/tiles.js';
+import { clamp } from '../core/gfx.js';
+import { T, FRAGIL } from '../world/tiles.js';
 import { Boneco } from '../art/rig.js';
 import { audio } from '../core/audio.js';
 

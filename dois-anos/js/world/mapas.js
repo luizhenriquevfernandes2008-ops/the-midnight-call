@@ -18,7 +18,7 @@
 //   vão pulando correndo  5,5 tiles
 // Vão de 6 ou degrau de 4 não é desafio, é parede.
 
-import { Mapa, T, VAZIO, SOLIDO, PLATAFORMA, ESPINHO, AGUA, FRAGIL } from './tiles.js';
+import { Mapa, T, SOLIDO, PLATAFORMA, ESPINHO, AGUA, FRAGIL } from './tiles.js';
 import { ORDEM, TEMAS } from './temas.js';
 import { memoriasDoMundo, MUNDOS } from '../dados/personalizacao.js';
 
@@ -31,6 +31,7 @@ class Construtor {
     this.moveis = [];
     this.molas = [];
     this.checkpoints = [];
+    this.dicas = [];
     this.gaiola = null;
     this.inicio = { x: 3 * T, y: 10 * T };
     this._variante = 0;
@@ -107,6 +108,9 @@ class Construtor {
     return this;
   }
   checkpoint(x, y) { this.checkpoints.push({ x: x * T + T / 2, y: y * T, pego: false }); return this; }
+  // Dica que aparece quando ela passa por este ponto. Só a fase 1 usa: quem
+  // não joga plataforma há vinte anos precisa que alguém diga como pular.
+  dica(x, texto) { this.dicas.push({ x: x * T, texto, dito: false }); return this; }
   comecar(x, y) { this.inicio = { x: x * T + T / 2, y: y * T }; return this; }
   final(x, y) { this.gaiola = { x: x * T + T / 2, y: y * T, aberta: false }; return this; }
 }
@@ -144,6 +148,9 @@ function fasePraia() {
   c.enfeite('concha', 12, CH, false);
   c.enfeite('castelo', 20, CH, false);
   c.trilha(10, CH - 3, 5);
+  c.dica(6, 'setas ou A/D para andar   ·   shift corre');
+  c.dica(16, 'espaço para pular — segurando, pula mais alto');
+  c.dica(30, 'os corações mostram por onde dá pra ir');
 
   // primeiro degrau e primeiro caranguejo
   c.agua(27, 28, CH);
@@ -158,11 +165,13 @@ function fasePraia() {
   c.plat(46, CH - 3, 4);
   c.plat(52, CH - 5, 4);
   c.carta(53, CH - 7);
+  c.dica(45, 'a carta lá em cima é uma memória. Encoste nela.');
   c.trilha(47, CH - 5, 3);
 
   c.chao(59, 78, CH);
   c.checkpoint(61, CH);
   c.enfeite('palmeira', 63, CH);
+  c.dica(63, 'pule EM CIMA do caranguejo. Encostar de lado dói.');
   c.inimigo(68, CH, 'caranguejo', 5);
   c.inimigo(74, CH, 'caranguejo', 3);
   c.bloco(71, CH - 2, 2, 1);
@@ -190,6 +199,8 @@ function fasePraia() {
   c.enfeite('palmeira', 115, CH);
   c.enfeite('concha', 119, CH, false);
   c.inimigo(122, CH, 'caranguejo', 5);
+  c.dica(112, 'a bandeira salva o ponto. Cair custa um coração, só isso.');
+  c.dica(124, 'pise na mola.');
   c.mola(126, CH - 1);
   c.coracao(126, CH - 5); c.coracao(126, CH - 7);
   c.carta(126, CH - 7);   // a mola sobe 8 tiles; 7 deixa folga
@@ -213,6 +224,7 @@ function fasePraia() {
   c.trilha(168, CH - 3, 4);
   c.plat(177, CH - 3, 3);
   c.carta(178, CH - 5);
+  c.dica(180, 'ele está ali dentro. Encoste na bolha.');
   c.checkpoint(184, CH);
   c.final(188, CH);
   return c;
@@ -418,7 +430,12 @@ function faseCeu() {
   const B = 42;
   c.comecar(4, B);
 
-  c.chao(0, 20, B);
+  // No céu não existe "chão": existe ilha de nuvem. Por isso aqui é bloco de
+  // três tiles de espessura e não chao(), que preencheria até o fundo do
+  // mapa e transformaria cada plataforma numa coluna branca de dez andares.
+  const ilha = (x0, x1, y, h = 3) => c.bloco(x0, y, x1 - x0 + 1, h);
+
+  ilha(0, 20, B, 4);
   c.enfeite('balao', 8, B - 4);
   c.enfeite('passarinho', 14, B - 6);
   c.trilha(9, B - 3, 5);
@@ -434,7 +451,7 @@ function faseCeu() {
   c.inimigo(27, B - 6, 'nuvenzinha', 4);
   c.trilha(25, B - 4, 3);
 
-  c.chao(36, 50, B - 14);
+  ilha(36, 50, B - 14);
   c.checkpoint(38, B - 14);
   c.enfeite('balao', 42, B - 18);
   c.mola(46, B - 15);
@@ -450,7 +467,7 @@ function faseCeu() {
   c.carta(70, B - 24);
   c.inimigo(60, B - 27, 'nuvenzinha', 6);
 
-  c.chao(74, 88, B - 24);
+  ilha(74, 88, B - 24);
   c.checkpoint(76, B - 24);
   c.enfeite('passarinho', 80, B - 28);
   c.inimigo(83, B - 24, 'nuvenzinha', 5);
@@ -462,7 +479,7 @@ function faseCeu() {
   c.movel(102, B - 28, 4, 6, 0, 38);
   c.fragil(112, B - 30, 3);
   c.movel(117, B - 31, 3, 0, 4, 28);
-  c.chao(123, 136, B - 32);
+  ilha(123, 136, B - 32);
   c.checkpoint(125, B - 32);
   c.plat(128, B - 34, 4);
   c.carta(130, B - 36);
@@ -471,7 +488,7 @@ function faseCeu() {
 
   // o terraço da lua
   c.plat(139, B - 34, 3);
-  c.chao(142, 149, B - 36);
+  ilha(142, 149, B - 36, 4);
   c.trilha(139, B - 36, 3);
   c.enfeite('balao', 145, B - 40);
   c.checkpoint(144, B - 36);
@@ -511,6 +528,7 @@ export function construirFase(n) {
     moveis: c.moveis,
     molas: c.molas,
     checkpoints: c.checkpoints,
+    dicas: c.dicas,
     gaiola: c.gaiola,
     inicio: c.inicio,
     totalCartas: mems.length,

@@ -5,11 +5,10 @@
 // carta fechada com o nome escondido — o que sobra é vontade de voltar
 // naquela fase, que é exatamente o ponto.
 
-import { VW, VH, clamp, easeOut } from '../core/gfx.js';
-import { ret, coracao, disco } from '../art/pixel.js';
+import { VW, VH } from '../core/gfx.js';
+import { ret, coracao } from '../art/pixel.js';
 import { COR } from '../art/paleta.js';
 import { text, quebrar } from '../core/text.js';
-import { caixa } from '../systems/dialogo.js';
 import { audio } from '../core/audio.js';
 import { MEMORIAS, MUNDOS } from '../dados/personalizacao.js';
 

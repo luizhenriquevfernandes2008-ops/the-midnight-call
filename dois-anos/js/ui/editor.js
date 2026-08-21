@@ -14,8 +14,8 @@
 //   3. Dá para editar ELE também, na mesma tela, com TAB. Ele aparece no
 //      jogo inteiro; deixar só ela editável seria estranho.
 
-import { VW, VH, clamp, lerp, easeOut } from '../core/gfx.js';
-import { ret, disco, degradeV, coracao } from '../art/pixel.js';
+import { VW, VH, clamp, easeOut } from '../core/gfx.js';
+import { ret, degradeV, coracao } from '../art/pixel.js';
 import { COR, NOMES_PELE, NOMES_CABELO, NOMES_ESTILO, NOMES_FRANJA, NOMES_OLHO,
   NOMES_FORMA_OLHO, NOMES_SOBRANCELHA, NOMES_BOCA, NOMES_OCULOS, NOMES_BRINCO,
   NOMES_ENFEITE, NOMES_ROUPA, NOMES_TECIDO, NOMES_SAPATO, NOMES_ALTURA,

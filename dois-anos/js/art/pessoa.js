@@ -21,10 +21,10 @@
 // onde a cabeça encosta no pescoço. Como o pivô é o mesmo para todas, elas
 // se encaixam sozinhas, e o rig só precisa saber uma posição de cabeça.
 
-import { sprite, escurecer, carimbar, contornar, DEG } from './pixel.js';
+import { sprite, escurecer } from './pixel.js';
 import { PELES, CABELOS, TECIDOS, SAPATOS, OLHOS, ESCLERA, PUPILA, BRILHO_OLHO, COR }
   from './paleta.js';
-import { clamp, lerp, mixHex, makeBuffer } from '../core/gfx.js';
+import { clamp, mixHex } from '../core/gfx.js';
 
 // ---------------------------------------------------------------------------
 // medidas do esqueleto, em pixels a partir do chão (para cima é negativo)

@@ -2080,9 +2080,9 @@ __mods["art/pessoa.js"] = function(__exp){
 // onde a cabeça encosta no pescoço. Como o pivô é o mesmo para todas, elas
 // se encaixam sozinhas, e o rig só precisa saber uma posição de cabeça.
 
-const { sprite, escurecer, carimbar, contornar, DEG } = __req("art/pixel.js");
+const { sprite, escurecer } = __req("art/pixel.js");
 const { PELES, CABELOS, TECIDOS, SAPATOS, OLHOS, ESCLERA, PUPILA, BRILHO_OLHO, COR } = __req("art/paleta.js");
-const { clamp, lerp, mixHex, makeBuffer } = __req("core/gfx.js");
+const { clamp, mixHex } = __req("core/gfx.js");
 
 // ---------------------------------------------------------------------------
 // medidas do esqueleto, em pixels a partir do chão (para cima é negativo)
@@ -3229,7 +3229,7 @@ __mods["world/ceu.js"] = function(__exp){
 // Uma silhueta preta lá no fundo mata as duas e o desenho vira adesivo.
 
 const { makeBuffer, mulberry32, VW, VH, mixHex, clamp } = __req("core/gfx.js");
-const { ret, degradeV, disco, granular, linha } = __req("art/pixel.js");
+const { ret, degradeV, disco } = __req("art/pixel.js");
 
 // ---------------------------------------------------------------------------
 // céu
@@ -3605,7 +3605,7 @@ __mods["world/tiles.js"] = function(__exp){
 // desenha superfície onde tem ar em cima, quina onde tem ar do lado. É o
 // que evita ter que autorar 47 variações de canto à mão.
 
-const { makeBuffer, mulberry32, clamp } = __req("core/gfx.js");
+const { makeBuffer, mulberry32 } = __req("core/gfx.js");
 const { ret, granular, linha, disco } = __req("art/pixel.js");
 
 const T = 16;
@@ -3695,9 +3695,20 @@ function tileSolido(x, mapa, tx, ty, tema) {
   // Nuvem tem que ser fofa dos QUATRO lados, senão vira laje branca com
   // chapéu de algodão.
   if (nuvem) {
-    if (arEsq) { disco(x, px + 2, py + 5, 4, te.corpo[0]); disco(x, px + 2, py + 12, 3, te.corpo[0]); }
-    if (arDir) { disco(x, px + T - 3, py + 5, 4, te.corpo[0]); disco(x, px + T - 3, py + 12, 3, te.corpo[0]); }
-    if (arBaixo) { disco(x, px + 4, py + T - 3, 4, te.corpo[0]); disco(x, px + 12, py + T - 3, 4, te.corpo[0]); }
+    const C = te.corpo[0];
+    if (arEsq) {
+      disco(x, px + 3, py + 4, 5, C); disco(x, px + 2, py + 11, 4, C);
+      ret(x, px, py + 2, 4, 12, C);
+    }
+    if (arDir) {
+      disco(x, px + T - 4, py + 4, 5, C); disco(x, px + T - 3, py + 11, 4, C);
+      ret(x, px + T - 4, py + 2, 4, 12, C);
+    }
+    if (arBaixo) {
+      disco(x, px + 4, py + T - 4, 5, C); disco(x, px + 12, py + T - 4, 5, C);
+      ret(x, px, py + T - 8, T, 5, C);
+      ret(x, px + 2, py + T - 2, T - 4, 1, te.topoDk);
+    }
   }
 
   if (arCima) superficie(x, px, py, te, tema.superficie, rnd, semente(tx, ty));
@@ -3754,6 +3765,17 @@ function superficie(x, px, py, te, estilo, rnd, sem) {
 function tilePlataforma(x, tx, ty, tema) {
   const px = tx * T, py = ty * T;
   const p = tema.plataforma;
+  if (tema.superficie === 'nuvem') {
+    // No céu, plataforma de uma via é uma nuvenzinha achatada. Tábua de
+    // madeira flutuando no espaço não convence ninguém.
+    const t = tema.terra;
+    ret(x, px, py + 2, T, 4, t.topo[0]);
+    disco(x, px + 4, py + 3, 4, t.topo[0]);
+    disco(x, px + 12, py + 3, 4, t.topo[0]);
+    ret(x, px, py + 1, T, 1, '#ffffff');
+    ret(x, px + 1, py + 6, T - 2, 1, t.topoDk);
+    return;
+  }
   // A plataforma tem 6 pixels de altura e fica colada no TOPO do tile: é
   // ali que o pé encosta, e desenhar ela no meio deixa o personagem
   // flutuando visualmente.
@@ -3839,17 +3861,6 @@ function desenharAgua(ctx, mapa, tema, camX, camY, tempo) {
   }
 }
 
-function desenharFragil(ctx, tile, camX, camY, tema) {
-  const px = Math.round(tile.x - camX), py = Math.round(tile.y - camY);
-  const a = tile.vida > 0 ? 1 : 0;
-  if (!a) return;
-  const tr = tema.plataforma;
-  const tremor = tile.tocado > 0 ? Math.round(Math.sin(tile.tocado * 40) * 1) : 0;
-  ret(ctx, px + tremor, py, T, 6, tr.madeiraHi);
-  ret(ctx, px + tremor, py + 4, T, 3, tr.madeira);
-  ret(ctx, px + tremor, py + 6, T, 1, tr.madeiraDk);
-}
-
   Object.defineProperty(__exp, "T", { get: function(){ return T; }, enumerable: true });
   Object.defineProperty(__exp, "VAZIO", { get: function(){ return VAZIO; }, enumerable: true });
   Object.defineProperty(__exp, "SOLIDO", { get: function(){ return SOLIDO; }, enumerable: true });
@@ -3860,7 +3871,6 @@ function desenharFragil(ctx, tile, camX, camY, tema) {
   Object.defineProperty(__exp, "Mapa", { get: function(){ return Mapa; }, enumerable: true });
   Object.defineProperty(__exp, "desenharTerreno", { get: function(){ return desenharTerreno; }, enumerable: true });
   Object.defineProperty(__exp, "desenharAgua", { get: function(){ return desenharAgua; }, enumerable: true });
-  Object.defineProperty(__exp, "desenharFragil", { get: function(){ return desenharFragil; }, enumerable: true });
 };
 __mods["world/fx.js"] = function(__exp){
 // fx.js — partículas: as do ar (sempre presentes) e as de acontecimento.
@@ -4160,8 +4170,7 @@ __mods["world/decor.js"] = function(__exp){
 // floresta só trocando a paleta.
 
 const { makeBuffer, mulberry32, mixHex } = __req("core/gfx.js");
-const { ret, disco, linha, granular } = __req("art/pixel.js");
-const { COR } = __req("art/paleta.js");
+const { ret, disco, linha } = __req("art/pixel.js");
 
 const cache = new Map();
 
@@ -4672,7 +4681,7 @@ __mods["world/mapas.js"] = function(__exp){
 //   vão pulando correndo  5,5 tiles
 // Vão de 6 ou degrau de 4 não é desafio, é parede.
 
-const { Mapa, T, VAZIO, SOLIDO, PLATAFORMA, ESPINHO, AGUA, FRAGIL } = __req("world/tiles.js");
+const { Mapa, T, SOLIDO, PLATAFORMA, ESPINHO, AGUA, FRAGIL } = __req("world/tiles.js");
 const { ORDEM, TEMAS } = __req("world/temas.js");
 const { memoriasDoMundo, MUNDOS } = __req("dados/personalizacao.js");
 
@@ -4685,6 +4694,7 @@ class Construtor {
     this.moveis = [];
     this.molas = [];
     this.checkpoints = [];
+    this.dicas = [];
     this.gaiola = null;
     this.inicio = { x: 3 * T, y: 10 * T };
     this._variante = 0;
@@ -4761,6 +4771,9 @@ class Construtor {
     return this;
   }
   checkpoint(x, y) { this.checkpoints.push({ x: x * T + T / 2, y: y * T, pego: false }); return this; }
+  // Dica que aparece quando ela passa por este ponto. Só a fase 1 usa: quem
+  // não joga plataforma há vinte anos precisa que alguém diga como pular.
+  dica(x, texto) { this.dicas.push({ x: x * T, texto, dito: false }); return this; }
   comecar(x, y) { this.inicio = { x: x * T + T / 2, y: y * T }; return this; }
   final(x, y) { this.gaiola = { x: x * T + T / 2, y: y * T, aberta: false }; return this; }
 }
@@ -4798,6 +4811,9 @@ function fasePraia() {
   c.enfeite('concha', 12, CH, false);
   c.enfeite('castelo', 20, CH, false);
   c.trilha(10, CH - 3, 5);
+  c.dica(6, 'setas ou A/D para andar   ·   shift corre');
+  c.dica(16, 'espaço para pular — segurando, pula mais alto');
+  c.dica(30, 'os corações mostram por onde dá pra ir');
 
   // primeiro degrau e primeiro caranguejo
   c.agua(27, 28, CH);
@@ -4812,11 +4828,13 @@ function fasePraia() {
   c.plat(46, CH - 3, 4);
   c.plat(52, CH - 5, 4);
   c.carta(53, CH - 7);
+  c.dica(45, 'a carta lá em cima é uma memória. Encoste nela.');
   c.trilha(47, CH - 5, 3);
 
   c.chao(59, 78, CH);
   c.checkpoint(61, CH);
   c.enfeite('palmeira', 63, CH);
+  c.dica(63, 'pule EM CIMA do caranguejo. Encostar de lado dói.');
   c.inimigo(68, CH, 'caranguejo', 5);
   c.inimigo(74, CH, 'caranguejo', 3);
   c.bloco(71, CH - 2, 2, 1);
@@ -4844,6 +4862,8 @@ function fasePraia() {
   c.enfeite('palmeira', 115, CH);
   c.enfeite('concha', 119, CH, false);
   c.inimigo(122, CH, 'caranguejo', 5);
+  c.dica(112, 'a bandeira salva o ponto. Cair custa um coração, só isso.');
+  c.dica(124, 'pise na mola.');
   c.mola(126, CH - 1);
   c.coracao(126, CH - 5); c.coracao(126, CH - 7);
   c.carta(126, CH - 7);   // a mola sobe 8 tiles; 7 deixa folga
@@ -4867,6 +4887,7 @@ function fasePraia() {
   c.trilha(168, CH - 3, 4);
   c.plat(177, CH - 3, 3);
   c.carta(178, CH - 5);
+  c.dica(180, 'ele está ali dentro. Encoste na bolha.');
   c.checkpoint(184, CH);
   c.final(188, CH);
   return c;
@@ -5072,7 +5093,12 @@ function faseCeu() {
   const B = 42;
   c.comecar(4, B);
 
-  c.chao(0, 20, B);
+  // No céu não existe "chão": existe ilha de nuvem. Por isso aqui é bloco de
+  // três tiles de espessura e não chao(), que preencheria até o fundo do
+  // mapa e transformaria cada plataforma numa coluna branca de dez andares.
+  const ilha = (x0, x1, y, h = 3) => c.bloco(x0, y, x1 - x0 + 1, h);
+
+  ilha(0, 20, B, 4);
   c.enfeite('balao', 8, B - 4);
   c.enfeite('passarinho', 14, B - 6);
   c.trilha(9, B - 3, 5);
@@ -5088,7 +5114,7 @@ function faseCeu() {
   c.inimigo(27, B - 6, 'nuvenzinha', 4);
   c.trilha(25, B - 4, 3);
 
-  c.chao(36, 50, B - 14);
+  ilha(36, 50, B - 14);
   c.checkpoint(38, B - 14);
   c.enfeite('balao', 42, B - 18);
   c.mola(46, B - 15);
@@ -5104,7 +5130,7 @@ function faseCeu() {
   c.carta(70, B - 24);
   c.inimigo(60, B - 27, 'nuvenzinha', 6);
 
-  c.chao(74, 88, B - 24);
+  ilha(74, 88, B - 24);
   c.checkpoint(76, B - 24);
   c.enfeite('passarinho', 80, B - 28);
   c.inimigo(83, B - 24, 'nuvenzinha', 5);
@@ -5116,7 +5142,7 @@ function faseCeu() {
   c.movel(102, B - 28, 4, 6, 0, 38);
   c.fragil(112, B - 30, 3);
   c.movel(117, B - 31, 3, 0, 4, 28);
-  c.chao(123, 136, B - 32);
+  ilha(123, 136, B - 32);
   c.checkpoint(125, B - 32);
   c.plat(128, B - 34, 4);
   c.carta(130, B - 36);
@@ -5125,7 +5151,7 @@ function faseCeu() {
 
   // o terraço da lua
   c.plat(139, B - 34, 3);
-  c.chao(142, 149, B - 36);
+  ilha(142, 149, B - 36, 4);
   c.trilha(139, B - 36, 3);
   c.enfeite('balao', 145, B - 40);
   c.checkpoint(144, B - 36);
@@ -5165,6 +5191,7 @@ function construirFase(n) {
     moveis: c.moveis,
     molas: c.molas,
     checkpoints: c.checkpoints,
+    dicas: c.dicas,
     gaiola: c.gaiola,
     inicio: c.inicio,
     totalCartas: mems.length,
@@ -5195,8 +5222,8 @@ __mods["systems/jogador.js"] = function(__exp){
 // A colisão resolve X e Y em passos SEPARADOS. Resolver junto faz a
 // personagem grudar em quina e escalar parede sozinha.
 
-const { clamp, lerp } = __req("core/gfx.js");
-const { T, SOLIDO, PLATAFORMA, ESPINHO, AGUA, FRAGIL } = __req("world/tiles.js");
+const { clamp } = __req("core/gfx.js");
+const { T, FRAGIL } = __req("world/tiles.js");
 const { Boneco } = __req("art/rig.js");
 const { audio } = __req("core/audio.js");
 
@@ -5787,7 +5814,6 @@ const { clamp } = __req("core/gfx.js");
 const { spriteBicho } = __req("art/bichos.js");
 const { desenhar } = __req("art/pixel.js");
 const { T } = __req("world/tiles.js");
-const { audio } = __req("core/audio.js");
 
 const PERFIS = {
   caranguejo:  { vel: 34, tipo: 'chao',  larg: 12, alt: 10, quadro: 0.22 },
@@ -5945,11 +5971,10 @@ __mods["systems/coletaveis.js"] = function(__exp){
 // tem sombra no chão? Não — tem BRILHO. A flutuação diz "isto é item, não é
 // cenário", e é o que separa uma moeda de um tijolo amarelo.
 
-const { clamp, lerp } = __req("core/gfx.js");
+const { clamp } = __req("core/gfx.js");
 const { ret, disco, coracao, aro } = __req("art/pixel.js");
 const { COR } = __req("art/paleta.js");
 const { T, FRAGIL } = __req("world/tiles.js");
-const { text } = __req("core/text.js");
 const { audio } = __req("core/audio.js");
 
 class Item {
@@ -6213,10 +6238,10 @@ __mods["systems/dialogo.js"] = function(__exp){
 //            texto tem cara de papel — porque é o conteúdo pelo qual o
 //            jogo inteiro existe, e ele não pode passar como legenda.
 
-const { VW, VH, clamp, lerp, easeBack, easeOut } = __req("core/gfx.js");
-const { ret, disco, coracao } = __req("art/pixel.js");
+const { VW, VH, clamp, easeBack, easeOut } = __req("core/gfx.js");
+const { ret, coracao } = __req("art/pixel.js");
 const { COR } = __req("art/paleta.js");
-const { text, quebrar, medir } = __req("core/text.js");
+const { text, quebrar } = __req("core/text.js");
 const { audio } = __req("core/audio.js");
 
 const VEL_LETRA = 42;    // caracteres por segundo
@@ -6547,10 +6572,9 @@ __mods["systems/nivel.js"] = function(__exp){
 // A interface vem depois da luz porque, se vier antes, os corações do canto
 // escurecem junto com a floresta e ninguém enxerga a própria vida.
 
-const { VW, VH, clamp, gfx } = __req("core/gfx.js");
-const { ret, disco, coracao } = __req("art/pixel.js");
-const { COR } = __req("art/paleta.js");
-const { T, FRAGIL, desenharTerreno, desenharAgua } = __req("world/tiles.js");
+const { VW, clamp, gfx } = __req("core/gfx.js");
+const { coracao } = __req("art/pixel.js");
+const { FRAGIL, desenharTerreno, desenharAgua } = __req("world/tiles.js");
 const { Fundo } = __req("world/ceu.js");
 const { Ambiente, Particulas } = __req("world/fx.js");
 const { Camera } = __req("world/camera.js");
@@ -6595,15 +6619,14 @@ class Nivel {
     // Ele só aparece andando com ela nas fases seguintes às que ele já foi
     // solto. Na fase 1 ele está preso e não existe fora da gaiola.
     const soltos = Math.min(4, progresso.resgates || 0);
-    if (soltos >= numero) {
-      this.companheiro.ligar(this.jogador.x - 24, this.jogador.y, soltos / 4);
-    } else if (soltos > 0) {
-      this.companheiro.ligar(this.jogador.x - 24, this.jogador.y, soltos / 4);
-    }
+    if (soltos > 0) this.companheiro.ligar(this.jogador.x - 24, this.jogador.y, soltos / 4);
 
-    // o boneco dele DENTRO da gaiola, com a solidez do progresso
+    // O boneco dele DENTRO da gaiola. Ele começa quase transparente e vai
+    // ficando inteiro a cada mundo — é o progresso do jogo virando imagem,
+    // sem barra e sem número.
     this.presoRig = new Companheiro(aparencia.ele);
     this.presoRig.rig.tocar('flutuando', true);
+    this.presoRig.rig.alpha = 0.34 + numero * 0.15;
     this.presoRig.solidez = soltos / 4;
     this.presoRig.solidezAlvo = soltos / 4;
 
@@ -6627,6 +6650,7 @@ class Nivel {
     this.plaquinha = new Plaquinha();
     this.plaquinha.mostrar(this.d.info);
 
+    this.dicas = (this.d.dicas || []).map(d => ({ ...d }));
     this.t = 0;
     this.cartas = 0;
     this.coletadas = [];
@@ -6694,7 +6718,9 @@ class Nivel {
         it.pego = true;
         if (it.tipo === 'coracao') {
           audio.coracao();
-          this.jogador.corações = Math.min(3, this.jogador.corações + (Math.random() < 0.25 ? 1 : 0));
+          // Coração cura, ponto. Numa história de presente, item que quase
+          // sempre não faz nada é só uma promessa quebrada.
+          if (this.jogador.corações < 3) { this.jogador.corações++; this.aoPerderVida(); }
         } else {
           audio.carta();
           this.cartas++;
@@ -6702,6 +6728,14 @@ class Nivel {
           this.carta.abrir(it.memoria);
           this.aoPegarCarta();
         }
+      }
+    }
+
+    // dicas: dispara ao passar do ponto, uma vez só
+    for (const d of this.dicas) {
+      if (!d.dito && this.jogador.x >= d.x) {
+        d.dito = true;
+        if (this.hud && this.mostrarDicas !== false) this.hud.mostrarDica(d.texto);
       }
     }
 
@@ -6802,7 +6836,7 @@ class Nivel {
       if (this.gaiola.aberta && this.resgatou && !this.terminou) {
         // solto: ele fica ao lado dela enquanto os dois conversam
         this.presoRig.rig.tocar('parada');
-        this.presoRig.rig.alpha = clamp(0.3 + this.numero * 0.18, 0, 1);
+        this.presoRig.rig.alpha = clamp(0.4 + this.numero * 0.15, 0, 1);
         this.presoRig.rig.desenhar(ctx, this.gaiola.x - cx, this.gaiola.y - cy, -1);
         this.presoRig.rig.alpha = 1;
       }
@@ -6891,7 +6925,7 @@ __mods["systems/final.js"] = function(__exp){
 const { VW, VH, clamp, lerp, easeOut, easeInOut } = __req("core/gfx.js");
 const { ret, disco, coracao, degradeV } = __req("art/pixel.js");
 const { COR } = __req("art/paleta.js");
-const { text, medir } = __req("core/text.js");
+const { text } = __req("core/text.js");
 const { audio } = __req("core/audio.js");
 const { CARTA_FINAL, NOMES, DATAS, MEMORIAS } = __req("dados/personalizacao.js");
 
@@ -7091,9 +7125,9 @@ __mods["ui/menu.js"] = function(__exp){
 // praia ao pôr do sol, com o nome dela na tela.
 
 const { VW, VH, clamp, lerp, easeOut, easeBack } = __req("core/gfx.js");
-const { ret, disco, coracao, degradeV } = __req("art/pixel.js");
+const { ret, coracao } = __req("art/pixel.js");
 const { COR } = __req("art/paleta.js");
-const { text, medir } = __req("core/text.js");
+const { text } = __req("core/text.js");
 const { audio } = __req("core/audio.js");
 const { NOMES, DATAS } = __req("dados/personalizacao.js");
 const { caixa } = __req("systems/dialogo.js");
@@ -7275,8 +7309,8 @@ __mods["ui/editor.js"] = function(__exp){
 //   3. Dá para editar ELE também, na mesma tela, com TAB. Ele aparece no
 //      jogo inteiro; deixar só ela editável seria estranho.
 
-const { VW, VH, clamp, lerp, easeOut } = __req("core/gfx.js");
-const { ret, disco, degradeV, coracao } = __req("art/pixel.js");
+const { VW, VH, clamp, easeOut } = __req("core/gfx.js");
+const { ret, degradeV, coracao } = __req("art/pixel.js");
 const { COR, NOMES_PELE, NOMES_CABELO, NOMES_ESTILO, NOMES_FRANJA, NOMES_OLHO, NOMES_FORMA_OLHO, NOMES_SOBRANCELHA, NOMES_BOCA, NOMES_OCULOS, NOMES_BRINCO, NOMES_ENFEITE, NOMES_ROUPA, NOMES_TECIDO, NOMES_SAPATO, NOMES_ALTURA, PELES, CABELOS, TECIDOS, SAPATOS, OLHOS } = __req("art/paleta.js");
 const { text, medir } = __req("core/text.js");
 const { Boneco } = __req("art/rig.js");
@@ -7487,11 +7521,10 @@ __mods["ui/album.js"] = function(__exp){
 // carta fechada com o nome escondido — o que sobra é vontade de voltar
 // naquela fase, que é exatamente o ponto.
 
-const { VW, VH, clamp, easeOut } = __req("core/gfx.js");
-const { ret, coracao, disco } = __req("art/pixel.js");
+const { VW, VH } = __req("core/gfx.js");
+const { ret, coracao } = __req("art/pixel.js");
 const { COR } = __req("art/paleta.js");
 const { text, quebrar } = __req("core/text.js");
-const { caixa } = __req("systems/dialogo.js");
 const { audio } = __req("core/audio.js");
 const { MEMORIAS, MUNDOS } = __req("dados/personalizacao.js");
 
@@ -7608,7 +7641,7 @@ class Album {
 __mods["ui/pausa.js"] = function(__exp){
 // pausa.js — o menu que aparece com ESC.
 
-const { VW, VH, clamp } = __req("core/gfx.js");
+const { VW, VH } = __req("core/gfx.js");
 const { ret, coracao } = __req("art/pixel.js");
 const { COR } = __req("art/paleta.js");
 const { text } = __req("core/text.js");
@@ -7671,8 +7704,8 @@ __mods["ui/hud.js"] = function(__exp){
 // própria cena — a bandeira que muda de cor, o brilho da carta, ele ficando
 // mais sólido a cada mundo.
 
-const { VW, VH, clamp, easeOut } = __req("core/gfx.js");
-const { ret, coracao, disco } = __req("art/pixel.js");
+const { VW, VH, clamp } = __req("core/gfx.js");
+const { ret, coracao } = __req("art/pixel.js");
 const { COR } = __req("art/paleta.js");
 const { text } = __req("core/text.js");
 
@@ -7747,13 +7780,12 @@ __mods["main.js"] = function(__exp){
 // Regra de desenho respeitada em todo estado: mundo primeiro, LUZ no meio,
 // interface por último.
 
-const { VW, VH, gfx, clamp, lerp, easeOut } = __req("core/gfx.js");
+const { gfx, clamp } = __req("core/gfx.js");
 const { input } = __req("core/input.js");
 const { audio } = __req("core/audio.js");
-const { save, formatarTempo } = __req("core/save.js");
-const { text, limparCacheTexto } = __req("core/text.js");
-const { ret, coracao } = __req("art/pixel.js");
-const { COR } = __req("art/paleta.js");
+const { save } = __req("core/save.js");
+const { text } = __req("core/text.js");
+const { ret } = __req("art/pixel.js");
 const { Boneco } = __req("art/rig.js");
 const { Fundo } = __req("world/ceu.js");
 const { TEMAS } = __req("world/temas.js");
@@ -7764,7 +7796,7 @@ const { Editor } = __req("ui/editor.js");
 const { Album } = __req("ui/album.js");
 const { Pausa } = __req("ui/pausa.js");
 const { Hud } = __req("ui/hud.js");
-const { APARENCIA_PADRAO, APARENCIA_ELE_PADRAO, MEMORIAS, NOMES } = __req("dados/personalizacao.js");
+const { APARENCIA_PADRAO, APARENCIA_ELE_PADRAO, MEMORIAS } = __req("dados/personalizacao.js");
 const { NUM_FASES } = __req("world/mapas.js");
 
 function quadro() { return new Promise(r => requestAnimationFrame(() => r())); }
@@ -7853,6 +7885,7 @@ class Jogo {
     if (para === 'jogo') {
       this.nivel = new Nivel(dados.fase, this.aparencia, this.progresso);
       this.nivel.hud = this.hud;
+      this.nivel.mostrarDicas = this.opcoes.mostrarDicas !== false;
       this.faseAtual = dados.fase;
       audio.tocarMusica(this.nivel.tema.musica);
     } else if (para === 'menu') {

@@ -7,10 +7,9 @@
 // A interface vem depois da luz porque, se vier antes, os corações do canto
 // escurecem junto com a floresta e ninguém enxerga a própria vida.
 
-import { VW, VH, clamp, gfx } from '../core/gfx.js';
-import { ret, disco, coracao } from '../art/pixel.js';
-import { COR } from '../art/paleta.js';
-import { T, FRAGIL, desenharTerreno, desenharAgua } from '../world/tiles.js';
+import { VW, clamp, gfx } from '../core/gfx.js';
+import { coracao } from '../art/pixel.js';
+import { FRAGIL, desenharTerreno, desenharAgua } from '../world/tiles.js';
 import { Fundo } from '../world/ceu.js';
 import { Ambiente, Particulas } from '../world/fx.js';
 import { Camera } from '../world/camera.js';
@@ -56,15 +55,14 @@ export class Nivel {
     // Ele só aparece andando com ela nas fases seguintes às que ele já foi
     // solto. Na fase 1 ele está preso e não existe fora da gaiola.
     const soltos = Math.min(4, progresso.resgates || 0);
-    if (soltos >= numero) {
-      this.companheiro.ligar(this.jogador.x - 24, this.jogador.y, soltos / 4);
-    } else if (soltos > 0) {
-      this.companheiro.ligar(this.jogador.x - 24, this.jogador.y, soltos / 4);
-    }
+    if (soltos > 0) this.companheiro.ligar(this.jogador.x - 24, this.jogador.y, soltos / 4);
 
-    // o boneco dele DENTRO da gaiola, com a solidez do progresso
+    // O boneco dele DENTRO da gaiola. Ele começa quase transparente e vai
+    // ficando inteiro a cada mundo — é o progresso do jogo virando imagem,
+    // sem barra e sem número.
     this.presoRig = new Companheiro(aparencia.ele);
     this.presoRig.rig.tocar('flutuando', true);
+    this.presoRig.rig.alpha = 0.34 + numero * 0.15;
     this.presoRig.solidez = soltos / 4;
     this.presoRig.solidezAlvo = soltos / 4;
 
@@ -88,6 +86,7 @@ export class Nivel {
     this.plaquinha = new Plaquinha();
     this.plaquinha.mostrar(this.d.info);
 
+    this.dicas = (this.d.dicas || []).map(d => ({ ...d }));
     this.t = 0;
     this.cartas = 0;
     this.coletadas = [];
@@ -155,7 +154,9 @@ export class Nivel {
         it.pego = true;
         if (it.tipo === 'coracao') {
           audio.coracao();
-          this.jogador.corações = Math.min(3, this.jogador.corações + (Math.random() < 0.25 ? 1 : 0));
+          // Coração cura, ponto. Numa história de presente, item que quase
+          // sempre não faz nada é só uma promessa quebrada.
+          if (this.jogador.corações < 3) { this.jogador.corações++; this.aoPerderVida(); }
         } else {
           audio.carta();
           this.cartas++;
@@ -163,6 +164,14 @@ export class Nivel {
           this.carta.abrir(it.memoria);
           this.aoPegarCarta();
         }
+      }
+    }
+
+    // dicas: dispara ao passar do ponto, uma vez só
+    for (const d of this.dicas) {
+      if (!d.dito && this.jogador.x >= d.x) {
+        d.dito = true;
+        if (this.hud && this.mostrarDicas !== false) this.hud.mostrarDica(d.texto);
       }
     }
 
@@ -263,7 +272,7 @@ export class Nivel {
       if (this.gaiola.aberta && this.resgatou && !this.terminou) {
         // solto: ele fica ao lado dela enquanto os dois conversam
         this.presoRig.rig.tocar('parada');
-        this.presoRig.rig.alpha = clamp(0.3 + this.numero * 0.18, 0, 1);
+        this.presoRig.rig.alpha = clamp(0.4 + this.numero * 0.15, 0, 1);
         this.presoRig.rig.desenhar(ctx, this.gaiola.x - cx, this.gaiola.y - cy, -1);
         this.presoRig.rig.alpha = 1;
       }

@@ -5,8 +5,8 @@
 // própria cena — a bandeira que muda de cor, o brilho da carta, ele ficando
 // mais sólido a cada mundo.
 
-import { VW, VH, clamp, easeOut } from '../core/gfx.js';
-import { ret, coracao, disco } from '../art/pixel.js';
+import { VW, VH, clamp } from '../core/gfx.js';
+import { ret, coracao } from '../art/pixel.js';
 import { COR } from '../art/paleta.js';
 import { text } from '../core/text.js';
 
