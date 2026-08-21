@@ -194,7 +194,7 @@ export class Fundo {
       this.camadas.push({ c: camadaNuvens(tema, L, 1.2, 0.85, 11).c, f: 0.06, y: 8 });
       this.camadas.push({ c: camadaMar(tema, L), f: 0.16, y: 150 });
       this.camadas.push({ c: camadaMorros(tema, L, 70, mixHex(tema.terra.corpo[0], tema.ceu[3], 0.55), 21, 1.6), f: 0.24, y: 122 });
-      this.camadas.push({ c: camadaArvores(tema, L, mixHex('#3f9e5a', tema.ceu[3], 0.42), mixHex('#7a5330', tema.ceu[3], 0.4), 33, 0.85), f: 0.42, y: 84 });
+      this.camadas.push({ c: camadaArvores(tema, L, mixHex('#3f9e5a', tema.ceu[3], 0.42), mixHex('#7a5330', tema.ceu[3], 0.4), 33, 0.62), f: 0.42, y: 84 });
     } else if (nomeTema === 'floresta') {
       this.camadas.push({ c: camadaEstrelas(L, 150, 7, 0.006), f: 0.03, y: 0 });
       this.camadas.push({ c: camadaMorros(tema, L, 90, mixHex('#1b2a48', tema.ceu[3], 0.35), 41, 1.3), f: 0.12, y: 120 });

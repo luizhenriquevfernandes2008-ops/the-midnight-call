@@ -3410,7 +3410,7 @@ class Fundo {
       this.camadas.push({ c: camadaNuvens(tema, L, 1.2, 0.85, 11).c, f: 0.06, y: 8 });
       this.camadas.push({ c: camadaMar(tema, L), f: 0.16, y: 150 });
       this.camadas.push({ c: camadaMorros(tema, L, 70, mixHex(tema.terra.corpo[0], tema.ceu[3], 0.55), 21, 1.6), f: 0.24, y: 122 });
-      this.camadas.push({ c: camadaArvores(tema, L, mixHex('#3f9e5a', tema.ceu[3], 0.42), mixHex('#7a5330', tema.ceu[3], 0.4), 33, 0.85), f: 0.42, y: 84 });
+      this.camadas.push({ c: camadaArvores(tema, L, mixHex('#3f9e5a', tema.ceu[3], 0.42), mixHex('#7a5330', tema.ceu[3], 0.4), 33, 0.62), f: 0.42, y: 84 });
     } else if (nomeTema === 'floresta') {
       this.camadas.push({ c: camadaEstrelas(L, 150, 7, 0.006), f: 0.03, y: 0 });
       this.camadas.push({ c: camadaMorros(tema, L, 90, mixHex('#1b2a48', tema.ceu[3], 0.35), 41, 1.3), f: 0.12, y: 120 });
@@ -4188,31 +4188,38 @@ function limparDecor() { cache.clear(); }
 // as peças. Todas desenhadas com o "chão" na última linha do canvas.
 // ---------------------------------------------------------------------------
 const PECAS = {
+  // Palmeira. Ela tem que ser CLARAMENTE mais alta que a personagem (44 px):
+  // árvore da altura de gente não lê como árvore, lê como arbusto grande.
   palmeira(x, rnd, t, v) {
-    const tronco = '#8a5f38', troncoDk = '#5e3f22', folha = '#3fa85e', folhaDk = '#2b7a44';
-    const h = 46 + (v % 3) * 9;
+    const tronco = '#a9743e', troncoHi = '#c99459', troncoDk = '#6e4622';
+    const folha = '#3fa85e', folhaDk = '#2b7a44', folhaHi = '#6ad07f';
+    const base = 108;
+    const h = 74 + (v % 3) * 8;
     // O tronco entorta: palmeira reta parece poste com salada em cima.
     for (let i = 0; i < h; i++) {
-      const dx = Math.round(Math.sin(i / h * 1.5) * 5);
-      ret(x, 22 + dx, 74 - i, 5, 1, tronco);
-      ret(x, 22 + dx, 74 - i, 1, 1, troncoDk);
-      if (i % 5 === 0) ret(x, 22 + dx, 74 - i, 5, 1, troncoDk);
+      const dx = Math.round(Math.sin(i / h * 1.6) * 7);
+      const larg = i > h - 12 ? 5 : 7;
+      ret(x, 28 + dx - larg / 2, base - i, larg, 1, tronco);
+      ret(x, 28 + dx - larg / 2, base - i, 1, 1, troncoDk);
+      ret(x, 28 + dx + larg / 2 - 1, base - i, 1, 1, troncoHi);
+      if (i % 6 === 0) ret(x, 28 + dx - larg / 2, base - i, larg, 1, troncoDk);
     }
-    const tx = 22 + Math.round(Math.sin(1.5) * 5) + 2, ty = 74 - h;
-    for (let f = 0; f < 6; f++) {
-      const a = Math.PI + (f / 5) * Math.PI;
-      const comp = 16 + (f % 2) * 5;
-      for (let s = 0; s <= comp; s++) {
-        const px = tx + Math.cos(a) * s;
-        const py = ty + Math.sin(a) * s * 0.55 + s * s * 0.018;
-        const esp = Math.max(1, 4 - Math.floor(s / 6));
-        ret(x, px - esp / 2, py, esp, esp, s > comp * 0.6 ? folhaDk : folha);
+    const tx = 28 + Math.round(Math.sin(1.6) * 7), ty = base - h;
+    // seis folhas em leque, caindo pelas pontas
+    for (let f = 0; f < 7; f++) {
+      const a = Math.PI + (f / 6) * Math.PI;
+      const comp = 22 + (f % 2) * 6;
+      for (let s2 = 0; s2 <= comp; s2++) {
+        const px = tx + Math.cos(a) * s2;
+        const py = ty + Math.sin(a) * s2 * 0.5 + s2 * s2 * 0.022;
+        const esp = Math.max(1, 5 - Math.floor(s2 / 7));
+        ret(x, px - esp / 2, py, esp, esp,
+          s2 > comp * 0.65 ? folhaDk : (f % 2 ? folha : folhaHi));
       }
     }
-    disco(x, tx, ty, 3, folhaDk);
-    // cocos
-    ret(x, tx - 3, ty + 3, 3, 3, '#6b4a2a');
-    ret(x, tx + 2, ty + 4, 3, 3, '#6b4a2a');
+    disco(x, tx, ty, 4, folhaDk);
+    ret(x, tx - 5, ty + 4, 4, 4, '#6b4a2a');
+    ret(x, tx + 2, ty + 5, 4, 4, '#6b4a2a');
   },
 
   concha(x, rnd, t) {
@@ -4222,23 +4229,29 @@ const PECAS = {
   },
 
   guardasol(x, rnd, t) {
-    ret(x, 15, 20, 2, 26, '#c8b49a');
-    for (let i = 0; i < 8; i++) {
-      const w = 32 - i * 4;
-      ret(x, 16 - w / 2, 20 - i * 2, w, 2, i % 2 ? '#ff6b8a' : '#fff3e0');
+    ret(x, 22, 26, 3, 36, '#c8b49a');
+    ret(x, 22, 26, 1, 36, '#a08c72');
+    for (let i = 0; i < 10; i++) {
+      const w = 46 - i * 4;
+      ret(x, 23 - w / 2, 26 - i * 2, w, 2, i % 2 ? '#ff6b8a' : '#fff3e0');
     }
-    ret(x, 15, 12, 2, 8, '#c8b49a');
+    ret(x, 22, 4, 2, 6, '#c8b49a');
+    ret(x, 20, 60, 8, 2, '#e0c8a8');
   },
 
   castelo(x, rnd, t) {
-    const a = '#f0cd8c', b = '#d9ab63';
-    ret(x, 2, 12, 20, 10, a);
-    ret(x, 2, 20, 20, 2, b);
+    const a = '#f0cd8c', b = '#d9ab63', c = '#ffe3a8';
+    ret(x, 2, 17, 30, 13, a);
+    ret(x, 2, 17, 30, 2, c);
+    ret(x, 2, 28, 30, 2, b);
     for (let i = 0; i < 3; i++) {
-      ret(x, 3 + i * 8, 4, 6, 9, a);
-      ret(x, 3 + i * 8, 4, 6, 2, b);
-      ret(x, 5 + i * 8, 0, 1, 4, '#ffffff');
+      ret(x, 3 + i * 11, 5, 9, 13, a);
+      ret(x, 3 + i * 11, 5, 9, 2, c);
+      ret(x, 3 + i * 11, 12, 9, 1, b);
+      ret(x, 7 + i * 11, 0, 1, 5, '#ff6b8a');
+      ret(x, 8 + i * 11, 0, 4, 3, '#ffffff');
     }
+    ret(x, 14, 22, 6, 8, b);
   },
 
   cogumelo(x, rnd, t, v) {
@@ -4361,7 +4374,7 @@ const PECAS = {
 };
 
 const TAM = {
-  palmeira: [46, 75], concha: [12, 8], guardasol: [34, 46], castelo: [24, 22],
+  palmeira: [60, 109], concha: [12, 8], guardasol: [48, 62], castelo: [34, 30],
   cogumelo: [24, 24], arbusto: [30, 22], flor: [8, 11], tronco: [36, 20],
   lanterna: [14, 44], poste: [26, 64], letreiro: [30, 26], lixeira: [18, 24],
   balao: [24, 38], passarinho: [16, 10], pedra: [24, 14], placa: [18, 26],
@@ -4753,89 +4766,107 @@ class Construtor {
 }
 
 // ---------------------------------------------------------------------------
-// FASE 1 — A PRAIA. Ensina andar, pular e pisar. Sem buraco mortal até a
-// metade: o primeiro erro do jogador não pode custar caro.
+// REGRAS DE PROJETO DAS FASES (medidas com a física de systems/jogador.js)
+//
+//   pulo parado sobe .......... 48 px = 3 tiles, no limite exato
+//   alcance correndo .......... ~100 px = 6 tiles
+//   mola arremessa ............ ~134 px = 8 tiles
+//
+// Por isso, aqui:
+//   DEGRAU MÁXIMO = 2 TILES (32 px). Três tiles é a altura exata do pulo,
+//     e "exato" significa que só acerta quem sai no pixel certo com a
+//     velocidade certa. Um robô de teste travou justamente nisso, e uma
+//     pessoa travaria também.
+//   VÃO MÁXIMO = 4 TILES no plano, 3 se ainda estiver subindo.
+//   CARTA fica no máximo 2 tiles acima de algum lugar onde dê pra pisar.
+//     Memória inalcançável é pior do que memória nenhuma.
+// ---------------------------------------------------------------------------
+
+// ---------------------------------------------------------------------------
+// FASE 1 — A PRAIA. Ensina andar, pular e pisar. O primeiro erro do jogador
+// não pode custar caro: até a metade não existe buraco que puna.
 // ---------------------------------------------------------------------------
 function fasePraia() {
   const c = new Construtor(196, 22);
   const CH = 16;
   c.comecar(4, CH);
 
-  // trecho de respiro: chão liso e reto, só pra sentir o controle
+  // respiro: chão liso e reto, só pra sentir o controle
   c.chao(0, 26, CH);
-  c.enfeite('palmeira', 8, CH - 4);
-  c.enfeite('guardasol', 15, CH - 3);
-  c.enfeite('concha', 12, CH - 1, false);
-  c.enfeite('castelo', 20, CH - 1, false);
+  c.enfeite('palmeira', 8, CH);
+  c.enfeite('guardasol', 15, CH);
+  c.enfeite('concha', 12, CH, false);
+  c.enfeite('castelo', 20, CH, false);
   c.trilha(10, CH - 3, 5);
 
   // primeiro degrau e primeiro caranguejo
-  c.chao(29, 44, CH - 1);
   c.agua(27, 28, CH);
+  c.chao(29, 44, CH - 1);
   c.inimigo(38, CH - 1, 'caranguejo', 4);
   c.arco(29, CH - 3, 5, 2);
-  c.enfeite('palmeira', 41, CH - 5);
-  c.enfeite('pedra', 33, CH - 2, false);
+  c.enfeite('palmeira', 41, CH - 1);
+  c.enfeite('pedra', 33, CH - 1, false);
 
-  // plataformas sobre a água — a carta fica no ponto mais alto
-  c.agua(45, 55, CH);
-  c.plat(46, CH - 4, 3);
-  c.plat(51, CH - 6, 3);
-  c.carta(52, CH - 8);
-  c.plat(56, CH - 4, 3);
-  c.trilha(46, CH - 6, 3);
+  // plataformas sobre a água, subindo de dois em dois tiles
+  c.agua(45, 57, CH);
+  c.plat(46, CH - 3, 4);
+  c.plat(52, CH - 5, 4);
+  c.carta(53, CH - 7);
+  c.trilha(47, CH - 5, 3);
 
   c.chao(59, 78, CH);
   c.checkpoint(61, CH);
-  c.enfeite('palmeira', 63, CH - 4);
+  c.enfeite('palmeira', 63, CH);
   c.inimigo(68, CH, 'caranguejo', 5);
   c.inimigo(74, CH, 'caranguejo', 3);
-  c.bloco(71, CH - 3, 2, 1);
-  c.coracao(71, CH - 5); c.coracao(72, CH - 5);
+  c.bloco(71, CH - 2, 2, 1);
+  c.coracao(71, CH - 4); c.coracao(72, CH - 4);
 
   // escadinha e mirante
   c.escada(79, CH - 1, 4);
   c.chao(83, 96, CH - 4);
-  c.enfeite('guardasol', 88, CH - 7);
+  c.enfeite('guardasol', 88, CH - 4);
   c.inimigo(92, CH - 4, 'caranguejo', 4);
-  c.plat(90, CH - 8, 4);
-  c.carta(92, CH - 10);
-  c.trilha(85, CH - 6, 4);
+  c.plat(87, CH - 6, 3);
+  c.plat(92, CH - 8, 3);
+  c.carta(93, CH - 10);
+  c.trilha(85, CH - 6, 3);
 
-  // descida em plataformas, com um pássaro voando
+  // descida em plataformas, com uma gaivota cruzando
   c.agua(97, 108, CH);
   c.plat(98, CH - 5, 3);
   c.plat(102, CH - 3, 3);
   c.inimigo(104, CH - 8, 'gaivota', 6);
-  c.plat(106, CH - 5, 3);
+  c.plat(106, CH - 2, 3);
 
   c.chao(110, 130, CH);
   c.checkpoint(112, CH);
-  c.enfeite('palmeira', 115, CH - 4);
-  c.enfeite('concha', 119, CH - 1, false);
+  c.enfeite('palmeira', 115, CH);
+  c.enfeite('concha', 119, CH, false);
   c.inimigo(122, CH, 'caranguejo', 5);
   c.mola(126, CH - 1);
-  c.coracao(126, CH - 6); c.coracao(126, CH - 8);
-  c.carta(126, CH - 11);
+  c.coracao(126, CH - 5); c.coracao(126, CH - 7);
+  c.carta(126, CH - 7);   // a mola sobe 8 tiles; 7 deixa folga
 
-  // trecho de vãos de verdade, agora que já sabe pular
+  // vãos de verdade, agora que já sabe pular
   c.chao(133, 140, CH);
   c.chao(144, 150, CH);
   c.chao(154, 162, CH);
   c.arco(140, CH - 2, 4, 2);
   c.arco(150, CH - 2, 4, 2);
   c.inimigo(147, CH, 'caranguejo', 2);
-  c.enfeite('palmeira', 158, CH - 4);
+  c.enfeite('palmeira', 158, CH);
 
   // o píer: madeira sobre a água, e ele no fim dela
   c.agua(163, 195, CH + 1);
   for (let x = 164; x <= 190; x++) c.plat(x, CH, 1);
-  c.enfeite('palmeira', 166, CH - 4);
-  c.enfeite('guardasol', 176, CH - 1);
+  c.enfeite('palmeira', 166, CH);
+  c.enfeite('guardasol', 176, CH);
   c.inimigo(172, CH, 'caranguejo', 3);
   c.inimigo(180, CH - 5, 'gaivota', 5);
   c.trilha(168, CH - 3, 4);
-  c.carta(178, CH - 4);
+  c.plat(177, CH - 3, 3);
+  c.carta(178, CH - 5);
   c.checkpoint(184, CH);
   c.final(188, CH);
   return c;
@@ -4850,60 +4881,63 @@ function faseFloresta() {
   c.comecar(4, CH);
 
   c.chao(0, 22, CH);
-  c.enfeite('tronco', 7, CH - 1, false);
-  c.enfeite('cogumelo', 12, CH - 1, false);
-  c.enfeite('arbusto', 16, CH - 1, false);
-  c.enfeite('lanterna', 19, CH - 3);
+  c.enfeite('tronco', 7, CH, false);
+  c.enfeite('cogumelo', 12, CH, false);
+  c.enfeite('arbusto', 16, CH, false);
+  c.enfeite('lanterna', 19, CH);
   c.trilha(9, CH - 3, 4);
 
+  c.arco(22, CH - 2, 4, 2);
   c.chao(25, 40, CH);
-  c.enfeite('arbusto', 27, CH - 1, false);
+  c.enfeite('arbusto', 27, CH, false);
   c.inimigo(31, CH, 'sombra', 5);
   c.mola(36, CH - 1);
-  c.plat(34, CH - 7, 5);
+  c.plat(34, CH - 7, 5);        // alcançada pela mola (8 tiles de impulso)
   c.carta(36, CH - 9);
-  c.enfeite('lanterna', 39, CH - 3);
+  c.enfeite('lanterna', 39, CH);
 
   // plataformas móveis sobre o vazio
-  c.movel(43, CH - 3, 3, 6, 0, 30);
-  c.movel(52, CH - 6, 3, 0, 4, 24);
+  c.movel(43, CH - 2, 3, 6, 0, 30);
+  c.movel(52, CH - 4, 3, 0, 4, 24);
   c.chao(58, 72, CH - 2);
   c.checkpoint(60, CH - 2);
-  c.enfeite('cogumelo', 63, CH - 3, false);
+  c.enfeite('cogumelo', 63, CH - 2, false);
   c.inimigo(66, CH - 2, 'sombra', 4);
   c.inimigo(69, CH - 8, 'vagalume', 5);
-  c.trilha(44, CH - 5, 3);
+  c.trilha(44, CH - 4, 3);
 
   // subida em cogumelos
   c.chao(75, 82, CH);
   c.mola(78, CH - 1);
   c.plat(76, CH - 7, 4);
-  c.plat(82, CH - 10, 4);
-  c.carta(84, CH - 12);
+  c.plat(81, CH - 9, 4);
+  c.carta(83, CH - 11);
   c.trilha(77, CH - 9, 3);
-  c.enfeite('lanterna', 81, CH - 3);
+  c.enfeite('lanterna', 81, CH);
 
   c.chao(86, 104, CH - 4);
   c.checkpoint(88, CH - 4);
   c.inimigo(94, CH - 4, 'sombra', 6);
   c.inimigo(99, CH - 10, 'vagalume', 6);
   c.espinhos(97, 99, CH - 5);
-  c.plat(96, CH - 9, 5);
-  c.enfeite('tronco', 101, CH - 5, false);
+  c.plat(95, CH - 6, 6);        // ponte por cima dos espinhos
+  c.enfeite('tronco', 101, CH - 4, false);
 
   // corredor de vaga-lumes
+  c.arco(104, CH - 2, 4, 2);
   c.chao(107, 126, CH);
-  c.enfeite('arbusto', 110, CH - 1, false);
-  c.enfeite('cogumelo', 116, CH - 1, false);
+  c.enfeite('arbusto', 110, CH, false);
+  c.enfeite('cogumelo', 116, CH, false);
   c.inimigo(112, CH - 6, 'vagalume', 4);
   c.inimigo(118, CH - 7, 'vagalume', 5);
   c.inimigo(123, CH - 5, 'vagalume', 4);
   c.arco(110, CH - 3, 7, 3);
-  c.carta(120, CH - 9);
+  c.plat(118, CH - 2, 4);
+  c.carta(120, CH - 4);
 
   // descida com plataformas móveis verticais
-  c.movel(129, CH - 4, 3, 0, 6, 30);
-  c.movel(136, CH - 8, 3, 0, 6, 26);
+  c.movel(129, CH - 2, 3, 0, 5, 30);
+  c.movel(136, CH - 6, 3, 0, 5, 26);
   c.chao(142, 158, CH - 1);
   c.checkpoint(144, CH - 1);
   c.mola(150, CH - 2);
@@ -4911,18 +4945,20 @@ function faseFloresta() {
   c.plat(148, CH - 8, 5);
   c.trilha(149, CH - 10, 4);
 
+  c.arco(158, CH - 3, 5, 2);
   c.chao(161, 178, CH);
   c.espinhos(166, 168, CH - 1);
-  c.plat(165, CH - 4, 5);
+  c.plat(165, CH - 2, 5);
   c.inimigo(173, CH, 'sombra', 4);
-  c.enfeite('tronco', 176, CH - 1, false);
+  c.enfeite('tronco', 176, CH, false);
 
   // a clareira
+  c.arco(178, CH - 2, 4, 2);
   c.chao(181, 213, CH);
-  c.enfeite('lanterna', 184, CH - 3);
-  c.enfeite('lanterna', 200, CH - 3);
-  c.enfeite('cogumelo', 190, CH - 1, false);
-  c.enfeite('arbusto', 196, CH - 1, false);
+  c.enfeite('lanterna', 184, CH);
+  c.enfeite('lanterna', 200, CH);
+  c.enfeite('cogumelo', 190, CH, false);
+  c.enfeite('arbusto', 196, CH, false);
   c.inimigo(188, CH - 7, 'vagalume', 6);
   c.trilha(186, CH - 3, 6);
   c.checkpoint(203, CH);
@@ -4931,7 +4967,7 @@ function faseFloresta() {
 }
 
 // ---------------------------------------------------------------------------
-// FASE 3 — A CIDADE NA CHUVA. Telhados, vão largo, subida de verdade.
+// FASE 3 — A CIDADE NA CHUVA. Telhados, vão largo, e um beco que sobe.
 // ---------------------------------------------------------------------------
 function faseCidade() {
   const c = new Construtor(226, 28);
@@ -4939,58 +4975,64 @@ function faseCidade() {
   c.comecar(4, CH);
 
   c.chao(0, 24, CH);
-  c.enfeite('poste', 8, CH - 1);
-  c.enfeite('lixeira', 13, CH - 1, false);
-  c.enfeite('letreiro', 18, CH - 5);
+  c.enfeite('poste', 8, CH);
+  c.enfeite('lixeira', 13, CH, false);
+  c.enfeite('letreiro', 18, CH - 4);
   c.trilha(10, CH - 3, 5);
   c.inimigo(20, CH, 'guardachuva', 4);
 
   // sobe para o telhado
   c.escada(26, CH - 1, 3);
   c.chao(29, 44, CH - 3);
-  c.enfeite('poste', 33, CH - 4);
+  c.enfeite('poste', 33, CH - 3);
   c.inimigo(38, CH - 3, 'guardachuva', 5);
-  c.plat(40, CH - 8, 4);
-  c.carta(42, CH - 10);
   c.checkpoint(31, CH - 3);
+  c.plat(38, CH - 5, 3);
+  c.plat(42, CH - 7, 3);
+  c.carta(43, CH - 9);
 
   // vão largo entre prédios, com plataforma móvel no meio
-  c.movel(47, CH - 6, 4, 7, 0, 40);
+  c.movel(47, CH - 5, 4, 7, 0, 40);
   c.chao(58, 74, CH - 6);
-  c.enfeite('letreiro', 62, CH - 9);
+  c.enfeite('letreiro', 62, CH - 8);
   c.inimigo(66, CH - 6, 'guardachuva', 5);
   c.inimigo(70, CH - 12, 'pombo', 6);
-  c.plat(63, CH - 11, 5);
-  c.trilha(64, CH - 13, 4);
+  c.plat(61, CH - 8, 3);
+  c.plat(65, CH - 10, 4);
+  c.trilha(66, CH - 12, 4);
 
   // escadaria de plataformas descendo
-  c.plat(77, CH - 9, 3);
-  c.plat(82, CH - 7, 3);
-  c.plat(87, CH - 5, 3);
+  c.plat(77, CH - 8, 3);
+  c.plat(82, CH - 6, 3);
+  c.plat(87, CH - 4, 3);
+  c.arco(88, CH - 6, 4, 2);
   c.chao(91, 108, CH - 2);
   c.checkpoint(93, CH - 2);
-  c.enfeite('lixeira', 96, CH - 3, false);
-  c.enfeite('poste', 101, CH - 3);
+  c.enfeite('lixeira', 96, CH - 2, false);
+  c.enfeite('poste', 101, CH - 2);
   c.inimigo(99, CH - 2, 'guardachuva', 4);
   c.espinhos(104, 106, CH - 3);
-  c.plat(103, CH - 6, 5);
-  c.carta(105, CH - 8);
+  c.plat(103, CH - 4, 5);
+  c.carta(105, CH - 6);
 
-  // beco: subida vertical apertada
+  // o beco: subida vertical, dois tiles por vez, alternando os lados
+  c.arco(108, CH - 3, 4, 2);
   c.chao(111, 116, CH);
   c.bloco(117, CH - 1, 1, 1);
-  c.plat(112, CH - 4, 3);
-  c.plat(116, CH - 7, 3);
+  c.plat(112, CH - 2, 3);
+  c.plat(116, CH - 4, 3);
+  c.plat(112, CH - 6, 3);
+  c.plat(116, CH - 8, 3);
   c.plat(112, CH - 10, 3);
-  c.plat(116, CH - 13, 3);
-  c.trilha(113, CH - 6, 2);
-  c.carta(117, CH - 15);
+  c.plat(116, CH - 12, 3);
+  c.trilha(113, CH - 4, 2);
+  c.carta(117, CH - 14);
   c.inimigo(114, CH - 12, 'pombo', 4);
 
   c.chao(120, 140, CH - 14);
   c.checkpoint(122, CH - 14);
-  c.enfeite('letreiro', 126, CH - 17);
-  c.enfeite('poste', 132, CH - 15);
+  c.enfeite('letreiro', 126, CH - 16);
+  c.enfeite('poste', 132, CH - 14);
   c.inimigo(130, CH - 14, 'guardachuva', 5);
   c.inimigo(137, CH - 20, 'pombo', 6);
   c.trilha(124, CH - 17, 5);
@@ -4998,23 +5040,25 @@ function faseCidade() {
   // travessia alta, plataformas móveis nos dois eixos
   c.movel(144, CH - 14, 3, 0, 5, 34);
   c.movel(151, CH - 12, 3, 6, 0, 44);
-  c.movel(162, CH - 16, 3, 0, 6, 30);
+  c.movel(162, CH - 15, 3, 0, 5, 30);
   c.chao(168, 184, CH - 10);
   c.checkpoint(170, CH - 10);
   c.inimigo(176, CH - 10, 'guardachuva', 5);
-  c.plat(178, CH - 15, 5);
-  c.carta(180, CH - 17);
-  c.enfeite('letreiro', 173, CH - 13);
+  c.plat(176, CH - 12, 4);
+  c.carta(178, CH - 14);
+  c.enfeite('letreiro', 173, CH - 12);
 
   // descida final até a rua
   c.plat(187, CH - 8, 4);
-  c.plat(193, CH - 5, 4);
-  c.chao(198, 225, CH);
-  c.enfeite('poste', 202, CH - 1);
-  c.enfeite('lixeira', 207, CH - 1, false);
-  c.enfeite('letreiro', 212, CH - 5);
-  c.inimigo(205, CH, 'guardachuva', 5);
-  c.trilha(200, CH - 3, 6);
+  c.plat(192, CH - 5, 4);
+  c.plat(197, CH - 3, 3);
+  c.arco(197, CH - 4, 4, 2);
+  c.chao(200, 225, CH);
+  c.enfeite('poste', 204, CH);
+  c.enfeite('lixeira', 208, CH, false);
+  c.enfeite('letreiro', 212, CH - 4);
+  c.inimigo(206, CH, 'guardachuva', 5);
+  c.trilha(202, CH - 3, 6);
   c.checkpoint(215, CH);
   c.final(220, CH);
   return c;
@@ -5025,64 +5069,67 @@ function faseCidade() {
 // ---------------------------------------------------------------------------
 function faseCeu() {
   const c = new Construtor(150, 46);
-  const BASE = 42;
-  c.comecar(4, BASE);
+  const B = 42;
+  c.comecar(4, B);
 
-  c.chao(0, 20, BASE);
-  c.enfeite('balao', 8, BASE - 4);
-  c.enfeite('passarinho', 14, BASE - 6);
-  c.trilha(9, BASE - 3, 5);
+  c.chao(0, 20, B);
+  c.enfeite('balao', 8, B - 4);
+  c.enfeite('passarinho', 14, B - 6);
+  c.trilha(9, B - 3, 5);
 
-  // começo da subida
-  c.plat(23, BASE - 3, 4);
-  c.plat(29, BASE - 6, 4);
-  c.plat(24, BASE - 9, 4);
-  c.plat(30, BASE - 12, 5);
-  c.carta(32, BASE - 14);
-  c.inimigo(27, BASE - 8, 'nuvenzinha', 4);
-  c.trilha(25, BASE - 5, 3);
+  // começo da subida: zigue-zague de dois em dois tiles
+  c.plat(23, B - 2, 4);
+  c.plat(28, B - 4, 4);
+  c.plat(24, B - 6, 4);
+  c.plat(29, B - 8, 4);
+  c.plat(25, B - 10, 4);
+  c.plat(30, B - 12, 5);
+  c.carta(32, B - 14);
+  c.inimigo(27, B - 6, 'nuvenzinha', 4);
+  c.trilha(25, B - 4, 3);
 
-  c.chao(36, 50, BASE - 14);
-  c.checkpoint(38, BASE - 14);
-  c.enfeite('balao', 42, BASE - 18);
-  c.mola(46, BASE - 15);
-  c.inimigo(44, BASE - 14, 'nuvenzinha', 5);
-  c.plat(44, BASE - 21, 5);
-  c.trilha(46, BASE - 19, 3);
+  c.chao(36, 50, B - 14);
+  c.checkpoint(38, B - 14);
+  c.enfeite('balao', 42, B - 18);
+  c.mola(46, B - 15);
+  c.inimigo(44, B - 14, 'nuvenzinha', 5);
+  c.plat(44, B - 21, 5);       // a mola sobe 8 tiles, sobra folga
+  c.trilha(46, B - 19, 3);
 
   // nuvens frágeis: pisou, tem meio segundo
-  c.fragil(53, BASE - 20, 3);
-  c.fragil(58, BASE - 22, 3);
-  c.fragil(63, BASE - 20, 3);
-  c.plat(68, BASE - 23, 4);
-  c.carta(70, BASE - 25);
-  c.inimigo(60, BASE - 27, 'nuvenzinha', 6);
+  c.fragil(52, B - 21, 3);
+  c.fragil(57, B - 23, 3);
+  c.fragil(63, B - 21, 3);
+  c.plat(68, B - 22, 4);
+  c.carta(70, B - 24);
+  c.inimigo(60, B - 27, 'nuvenzinha', 6);
 
-  c.chao(74, 88, BASE - 24);
-  c.checkpoint(76, BASE - 24);
-  c.enfeite('passarinho', 80, BASE - 28);
-  c.inimigo(83, BASE - 24, 'nuvenzinha', 5);
-  c.movel(90, BASE - 26, 3, 0, 6, 30);
-  c.plat(96, BASE - 29, 4);
-  c.trilha(91, BASE - 29, 3);
+  c.chao(74, 88, B - 24);
+  c.checkpoint(76, B - 24);
+  c.enfeite('passarinho', 80, B - 28);
+  c.inimigo(83, B - 24, 'nuvenzinha', 5);
+  c.movel(90, B - 24, 3, 0, 4, 30);
+  c.plat(96, B - 26, 4);
+  c.trilha(91, B - 26, 3);
 
-  // trecho de plataformas móveis largas, o mais alto da subida
-  c.movel(102, BASE - 30, 4, 6, 0, 38);
-  c.fragil(112, BASE - 32, 3);
-  c.movel(117, BASE - 33, 3, 0, 5, 28);
-  c.chao(123, 136, BASE - 34);
-  c.checkpoint(125, BASE - 34);
-  c.carta(129, BASE - 36);
-  c.inimigo(132, BASE - 34, 'nuvenzinha', 4);
-  c.enfeite('balao', 127, BASE - 38);
+  // trecho mais alto: móveis largas e uma nuvem frágil no meio
+  c.movel(102, B - 28, 4, 6, 0, 38);
+  c.fragil(112, B - 30, 3);
+  c.movel(117, B - 31, 3, 0, 4, 28);
+  c.chao(123, 136, B - 32);
+  c.checkpoint(125, B - 32);
+  c.plat(128, B - 34, 4);
+  c.carta(130, B - 36);
+  c.inimigo(132, B - 32, 'nuvenzinha', 4);
+  c.enfeite('balao', 127, B - 36);
 
   // o terraço da lua
-  c.plat(139, BASE - 37, 3);
-  c.chao(142, 149, BASE - 40);
-  c.trilha(139, BASE - 39, 3);
-  c.enfeite('balao', 145, BASE - 44);
-  c.checkpoint(144, BASE - 40);
-  c.final(146, BASE - 40);
+  c.plat(139, B - 34, 3);
+  c.chao(142, 149, B - 36);
+  c.trilha(139, B - 36, 3);
+  c.enfeite('balao', 145, B - 40);
+  c.checkpoint(144, B - 36);
+  c.final(146, B - 36);
   return c;
 }
 
@@ -6240,7 +6287,7 @@ class Dialogo {
   desenhar(ctx, bonecos, t) {
     if (!this.ativo || !this.linha) return;
     const k = easeOut(this.entrada);
-    const h = 62;
+    const h = 54;
     const y = VH - h - 8 + Math.round((1 - k) * 40);
     const x = 10, w = VW - 20;
 
@@ -6249,33 +6296,33 @@ class Dialogo {
     // retrato
     const b = bonecos[this.linha.quem];
     if (b) {
-      ret(ctx, x + 6, y + 6, 44, 44, COR.uiCaixaDk);
-      ret(ctx, x + 6, y + 6, 44, 1, COR.uiBorda);
-      ret(ctx, x + 6, y + 49, 44, 1, COR.uiBorda);
+      ret(ctx, x + 6, y + 6, 42, 42, COR.uiCaixaDk);
+      ret(ctx, x + 6, y + 6, 42, 1, COR.uiBorda);
+      ret(ctx, x + 6, y + 47, 42, 1, COR.uiBorda);
       ctx.save();
       ctx.beginPath();
-      ctx.rect(x + 6, y + 6, 44, 44);
+      ctx.rect(x + 6, y + 6, 42, 42);
       ctx.clip();
       // A cabeça é desenhada grande e cortada pela moldura: assim o rosto
       // ocupa o quadro inteiro em vez de nadar no meio dele. A âncora está
       // deslocada porque o pivô do sprite é o PESCOÇO, não o centro do rosto.
-      b.desenharCabeca(ctx, x + 20, y + 42, 2.6, this.linha.quem === 'ele' ? -1 : 1);
+      b.desenharCabeca(ctx, x + 21, y + 43, 2.3, this.linha.quem === 'ele' ? -1 : 1);
       ctx.restore();
     }
 
     const nome = this.linha.nome || '';
     if (nome) {
-      text(ctx, nome, x + 58, y + 6, { size: 10, color: COR.uiDestaque, outline: 1 });
+      text(ctx, nome, x + 56, y + 5, { size: 10, color: COR.uiDestaque, outline: 1 });
     }
 
     // texto digitado
     let restante = Math.floor(this.mostrado);
-    let ly = y + (nome ? 20 : 12);
+    let ly = y + (nome ? 19 : 12);
     for (const linha of this.quebradas) {
       if (restante <= 0) break;
       const pedaco = linha.slice(0, restante);
       restante -= linha.length;
-      text(ctx, pedaco, x + 58, ly, { size: 11, color: COR.uiTexto, outline: 1 });
+      text(ctx, pedaco, x + 56, ly, { size: 11, color: COR.uiTexto, outline: 1 });
       ly += 14;
     }
 
@@ -6808,7 +6855,10 @@ class Nivel {
       if (!!d.atras !== atras) continue;
       const p = pecaDecor(d.tipo, this.tema, this.nomeTema, d.v);
       if (!p) continue;
-      const x = Math.round(d.x - cx), y = Math.round(d.y - cy) - p.h + T;
+      // CONVENÇÃO: o `y` do enfeite é a LINHA DE TILE ONDE ELE PISA, e a
+      // peça é desenhada com a base exatamente ali. A primeira versão somava
+      // um tile e a floresta inteira ficou plantada um palmo acima do chão.
+      const x = Math.round(d.x - cx), y = Math.round(d.y - cy) - p.h;
       if (x + p.w < 0 || x > VW) continue;
       ctx.drawImage(p.c, x, y);
     }
@@ -7083,18 +7133,34 @@ class Titulo {
   desenhar(ctx, fundo, bonecos) {
     fundo.desenhar(ctx, this.t * 8, 0);
 
-    // chão de areia no rodapé, para os dois terem onde pisar
-    ret(ctx, 0, VH - 34, VW, 34, '#f7d18c');
-    ret(ctx, 0, VH - 34, VW, 3, '#ffe3a8');
-    ret(ctx, 0, VH - 31, VW, 2, '#e0b46b');
+    // Chão de areia no rodapé. A altura NÃO é decorativa: a base das
+    // árvores da paralaxe fica em y=214, e é este areal que precisa cobrir
+    // os troncos — sem ele a mata do fundo fica plantada dentro do mar.
+    const SOLO = 206;
+    ret(ctx, 0, SOLO, VW, VH - SOLO, '#f7d18c');
+    ret(ctx, 0, SOLO, VW, 3, '#ffe3a8');
+    ret(ctx, 0, SOLO + 3, VW, 2, '#e0b46b');
+    // espuma quebrando na areia — fina e irregular, senão vira faixa de neve
+    for (let i = 0; i < VW; i += 4) {
+      const onda = Math.sin(i * 0.09 + this.t * 1.6) + Math.sin(i * 0.031 - this.t);
+      if (onda < 0.2) continue;
+      ret(ctx, i, SOLO - 1 - Math.round(onda), 4, 1 + Math.round(onda), '#dff4ff');
+    }
 
     // --- os dois ---
+    // Um pouco maiores que no jogo: aqui eles são o assunto da tela, não
+    // uma peça do cenário.
     const bob = Math.sin(this.t * 1.6) * 1.2;
-    if (bonecos.ele) bonecos.ele.desenhar(ctx, 78, VH - 18 + bob, 1);
-    if (bonecos.ela) bonecos.ela.desenhar(ctx, 108, VH - 18 - bob, -1);
+    const pe = SOLO + 56;
+    const ESC = 1.35;
+    ctx.save();
+    ctx.scale(ESC, ESC);
+    if (bonecos.ele) bonecos.ele.desenhar(ctx, 62 / ESC, (pe + bob) / ESC, 1);
+    if (bonecos.ela) bonecos.ela.desenhar(ctx, 100 / ESC, (pe - bob) / ESC, -1);
+    ctx.restore();
     // coraçãozinho pulando entre os dois
     const hp = Math.abs(Math.sin(this.t * 2.2));
-    coracao(ctx, 93, VH - 66 - hp * 5, 4 + hp * 1.5, COR.coracao, COR.coracaoHi);
+    coracao(ctx, 81, pe - 66 - hp * 5, 5 + hp * 1.5, COR.coracao, COR.coracaoHi);
 
     // --- título ---
     const ent = easeBack(clamp(this.t / 0.9, 0, 1));
@@ -7109,9 +7175,9 @@ class Titulo {
 
     // --- opções ---
     const ox = VW - 130;
-    const oy = 96;
+    const oy = 88;
     for (let i = 0; i < this.opcoes.length; i++) {
-      const y = oy + i * 20;
+      const y = oy + i * 19;
       const ativo = i === this.sel;
       const ap = clamp((this.t - 0.9 - i * 0.09) / 0.3, 0, 1);
       if (ap <= 0) continue;
@@ -7468,10 +7534,10 @@ class Album {
 
     text(ctx, 'ÁLBUM', VW / 2, 8,
       { size: 16, font: 'titulo', align: 'center', color: COR.uiDestaque, outline: 1 });
-    text(ctx, `${this.coletadas.size} de ${MEMORIAS.length} memórias`, VW / 2, 28,
+    text(ctx, `${this.coletadas.size} de ${MEMORIAS.length} memórias`, VW / 2, 26,
       { size: 9, align: 'center', color: COR.uiDim });
 
-    const cw = 106, ch = 40, gx = 14, gy = 44;
+    const cw = 106, ch = 40, gx = 14, gy = 46;
     for (let i = 0; i < MEMORIAS.length; i++) {
       const m = MEMORIAS[i];
       const col = i % COLS, lin = Math.floor(i / COLS);

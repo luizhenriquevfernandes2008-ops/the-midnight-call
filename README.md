@@ -11,6 +11,24 @@ Built from scratch in HTML5 Canvas. No engine, no build step, no dependencies.
 
 ---
 
+## Also in here: [`dois-anos/`](dois-anos/)
+
+**Dois Anos** — a second, completely different game sharing the same
+foundations: Canvas only, no engine, no build step, packable into a single
+double-clickable HTML.
+
+Where *The Midnight Call* is a dark hallway, *Dois Anos* is a side-scrolling
+platformer in full colour: four worlds, sixteen collectible memories, and a
+character creator so the heroine can be made to look like a specific real
+person. Built as an anniversary present.
+
+The interesting reuse: the same skeletal-rig idea (hand-drawn pixel parts
+rotating around joints, key poses interpolated) but with the colour map
+generated at runtime from an appearance object, so hair, skin and clothing
+are eighteen numbers instead of forty redrawn frames.
+
+---
+
 ## Running it
 
 **Double-click `JOGO_OFFLINE.html`.** No server, no Python, no internet, no

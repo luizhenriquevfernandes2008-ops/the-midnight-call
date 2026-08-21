@@ -81,7 +81,7 @@ export class Dialogo {
   desenhar(ctx, bonecos, t) {
     if (!this.ativo || !this.linha) return;
     const k = easeOut(this.entrada);
-    const h = 62;
+    const h = 54;
     const y = VH - h - 8 + Math.round((1 - k) * 40);
     const x = 10, w = VW - 20;
 
@@ -90,33 +90,33 @@ export class Dialogo {
     // retrato
     const b = bonecos[this.linha.quem];
     if (b) {
-      ret(ctx, x + 6, y + 6, 44, 44, COR.uiCaixaDk);
-      ret(ctx, x + 6, y + 6, 44, 1, COR.uiBorda);
-      ret(ctx, x + 6, y + 49, 44, 1, COR.uiBorda);
+      ret(ctx, x + 6, y + 6, 42, 42, COR.uiCaixaDk);
+      ret(ctx, x + 6, y + 6, 42, 1, COR.uiBorda);
+      ret(ctx, x + 6, y + 47, 42, 1, COR.uiBorda);
       ctx.save();
       ctx.beginPath();
-      ctx.rect(x + 6, y + 6, 44, 44);
+      ctx.rect(x + 6, y + 6, 42, 42);
       ctx.clip();
       // A cabeça é desenhada grande e cortada pela moldura: assim o rosto
       // ocupa o quadro inteiro em vez de nadar no meio dele. A âncora está
       // deslocada porque o pivô do sprite é o PESCOÇO, não o centro do rosto.
-      b.desenharCabeca(ctx, x + 20, y + 42, 2.6, this.linha.quem === 'ele' ? -1 : 1);
+      b.desenharCabeca(ctx, x + 21, y + 43, 2.3, this.linha.quem === 'ele' ? -1 : 1);
       ctx.restore();
     }
 
     const nome = this.linha.nome || '';
     if (nome) {
-      text(ctx, nome, x + 58, y + 6, { size: 10, color: COR.uiDestaque, outline: 1 });
+      text(ctx, nome, x + 56, y + 5, { size: 10, color: COR.uiDestaque, outline: 1 });
     }
 
     // texto digitado
     let restante = Math.floor(this.mostrado);
-    let ly = y + (nome ? 20 : 12);
+    let ly = y + (nome ? 19 : 12);
     for (const linha of this.quebradas) {
       if (restante <= 0) break;
       const pedaco = linha.slice(0, restante);
       restante -= linha.length;
-      text(ctx, pedaco, x + 58, ly, { size: 11, color: COR.uiTexto, outline: 1 });
+      text(ctx, pedaco, x + 56, ly, { size: 11, color: COR.uiTexto, outline: 1 });
       ly += 14;
     }
 

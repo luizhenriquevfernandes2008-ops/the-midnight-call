@@ -38,31 +38,38 @@ export function limparDecor() { cache.clear(); }
 // as peças. Todas desenhadas com o "chão" na última linha do canvas.
 // ---------------------------------------------------------------------------
 const PECAS = {
+  // Palmeira. Ela tem que ser CLARAMENTE mais alta que a personagem (44 px):
+  // árvore da altura de gente não lê como árvore, lê como arbusto grande.
   palmeira(x, rnd, t, v) {
-    const tronco = '#8a5f38', troncoDk = '#5e3f22', folha = '#3fa85e', folhaDk = '#2b7a44';
-    const h = 46 + (v % 3) * 9;
+    const tronco = '#a9743e', troncoHi = '#c99459', troncoDk = '#6e4622';
+    const folha = '#3fa85e', folhaDk = '#2b7a44', folhaHi = '#6ad07f';
+    const base = 108;
+    const h = 74 + (v % 3) * 8;
     // O tronco entorta: palmeira reta parece poste com salada em cima.
     for (let i = 0; i < h; i++) {
-      const dx = Math.round(Math.sin(i / h * 1.5) * 5);
-      ret(x, 22 + dx, 74 - i, 5, 1, tronco);
-      ret(x, 22 + dx, 74 - i, 1, 1, troncoDk);
-      if (i % 5 === 0) ret(x, 22 + dx, 74 - i, 5, 1, troncoDk);
+      const dx = Math.round(Math.sin(i / h * 1.6) * 7);
+      const larg = i > h - 12 ? 5 : 7;
+      ret(x, 28 + dx - larg / 2, base - i, larg, 1, tronco);
+      ret(x, 28 + dx - larg / 2, base - i, 1, 1, troncoDk);
+      ret(x, 28 + dx + larg / 2 - 1, base - i, 1, 1, troncoHi);
+      if (i % 6 === 0) ret(x, 28 + dx - larg / 2, base - i, larg, 1, troncoDk);
     }
-    const tx = 22 + Math.round(Math.sin(1.5) * 5) + 2, ty = 74 - h;
-    for (let f = 0; f < 6; f++) {
-      const a = Math.PI + (f / 5) * Math.PI;
-      const comp = 16 + (f % 2) * 5;
-      for (let s = 0; s <= comp; s++) {
-        const px = tx + Math.cos(a) * s;
-        const py = ty + Math.sin(a) * s * 0.55 + s * s * 0.018;
-        const esp = Math.max(1, 4 - Math.floor(s / 6));
-        ret(x, px - esp / 2, py, esp, esp, s > comp * 0.6 ? folhaDk : folha);
+    const tx = 28 + Math.round(Math.sin(1.6) * 7), ty = base - h;
+    // seis folhas em leque, caindo pelas pontas
+    for (let f = 0; f < 7; f++) {
+      const a = Math.PI + (f / 6) * Math.PI;
+      const comp = 22 + (f % 2) * 6;
+      for (let s2 = 0; s2 <= comp; s2++) {
+        const px = tx + Math.cos(a) * s2;
+        const py = ty + Math.sin(a) * s2 * 0.5 + s2 * s2 * 0.022;
+        const esp = Math.max(1, 5 - Math.floor(s2 / 7));
+        ret(x, px - esp / 2, py, esp, esp,
+          s2 > comp * 0.65 ? folhaDk : (f % 2 ? folha : folhaHi));
       }
     }
-    disco(x, tx, ty, 3, folhaDk);
-    // cocos
-    ret(x, tx - 3, ty + 3, 3, 3, '#6b4a2a');
-    ret(x, tx + 2, ty + 4, 3, 3, '#6b4a2a');
+    disco(x, tx, ty, 4, folhaDk);
+    ret(x, tx - 5, ty + 4, 4, 4, '#6b4a2a');
+    ret(x, tx + 2, ty + 5, 4, 4, '#6b4a2a');
   },
 
   concha(x, rnd, t) {
@@ -72,23 +79,29 @@ const PECAS = {
   },
 
   guardasol(x, rnd, t) {
-    ret(x, 15, 20, 2, 26, '#c8b49a');
-    for (let i = 0; i < 8; i++) {
-      const w = 32 - i * 4;
-      ret(x, 16 - w / 2, 20 - i * 2, w, 2, i % 2 ? '#ff6b8a' : '#fff3e0');
+    ret(x, 22, 26, 3, 36, '#c8b49a');
+    ret(x, 22, 26, 1, 36, '#a08c72');
+    for (let i = 0; i < 10; i++) {
+      const w = 46 - i * 4;
+      ret(x, 23 - w / 2, 26 - i * 2, w, 2, i % 2 ? '#ff6b8a' : '#fff3e0');
     }
-    ret(x, 15, 12, 2, 8, '#c8b49a');
+    ret(x, 22, 4, 2, 6, '#c8b49a');
+    ret(x, 20, 60, 8, 2, '#e0c8a8');
   },
 
   castelo(x, rnd, t) {
-    const a = '#f0cd8c', b = '#d9ab63';
-    ret(x, 2, 12, 20, 10, a);
-    ret(x, 2, 20, 20, 2, b);
+    const a = '#f0cd8c', b = '#d9ab63', c = '#ffe3a8';
+    ret(x, 2, 17, 30, 13, a);
+    ret(x, 2, 17, 30, 2, c);
+    ret(x, 2, 28, 30, 2, b);
     for (let i = 0; i < 3; i++) {
-      ret(x, 3 + i * 8, 4, 6, 9, a);
-      ret(x, 3 + i * 8, 4, 6, 2, b);
-      ret(x, 5 + i * 8, 0, 1, 4, '#ffffff');
+      ret(x, 3 + i * 11, 5, 9, 13, a);
+      ret(x, 3 + i * 11, 5, 9, 2, c);
+      ret(x, 3 + i * 11, 12, 9, 1, b);
+      ret(x, 7 + i * 11, 0, 1, 5, '#ff6b8a');
+      ret(x, 8 + i * 11, 0, 4, 3, '#ffffff');
     }
+    ret(x, 14, 22, 6, 8, b);
   },
 
   cogumelo(x, rnd, t, v) {
@@ -211,7 +224,7 @@ const PECAS = {
 };
 
 const TAM = {
-  palmeira: [46, 75], concha: [12, 8], guardasol: [34, 46], castelo: [24, 22],
+  palmeira: [60, 109], concha: [12, 8], guardasol: [48, 62], castelo: [34, 30],
   cogumelo: [24, 24], arbusto: [30, 22], flor: [8, 11], tronco: [36, 20],
   lanterna: [14, 44], poste: [26, 64], letreiro: [30, 26], lixeira: [18, 24],
   balao: [24, 38], passarinho: [16, 10], pedra: [24, 14], placa: [18, 26],

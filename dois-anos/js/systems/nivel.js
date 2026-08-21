@@ -316,7 +316,10 @@ export class Nivel {
       if (!!d.atras !== atras) continue;
       const p = pecaDecor(d.tipo, this.tema, this.nomeTema, d.v);
       if (!p) continue;
-      const x = Math.round(d.x - cx), y = Math.round(d.y - cy) - p.h + T;
+      // CONVENÇÃO: o `y` do enfeite é a LINHA DE TILE ONDE ELE PISA, e a
+      // peça é desenhada com a base exatamente ali. A primeira versão somava
+      // um tile e a floresta inteira ficou plantada um palmo acima do chão.
+      const x = Math.round(d.x - cx), y = Math.round(d.y - cy) - p.h;
       if (x + p.w < 0 || x > VW) continue;
       ctx.drawImage(p.c, x, y);
     }

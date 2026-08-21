@@ -48,18 +48,34 @@ export class Titulo {
   desenhar(ctx, fundo, bonecos) {
     fundo.desenhar(ctx, this.t * 8, 0);
 
-    // chão de areia no rodapé, para os dois terem onde pisar
-    ret(ctx, 0, VH - 34, VW, 34, '#f7d18c');
-    ret(ctx, 0, VH - 34, VW, 3, '#ffe3a8');
-    ret(ctx, 0, VH - 31, VW, 2, '#e0b46b');
+    // Chão de areia no rodapé. A altura NÃO é decorativa: a base das
+    // árvores da paralaxe fica em y=214, e é este areal que precisa cobrir
+    // os troncos — sem ele a mata do fundo fica plantada dentro do mar.
+    const SOLO = 206;
+    ret(ctx, 0, SOLO, VW, VH - SOLO, '#f7d18c');
+    ret(ctx, 0, SOLO, VW, 3, '#ffe3a8');
+    ret(ctx, 0, SOLO + 3, VW, 2, '#e0b46b');
+    // espuma quebrando na areia — fina e irregular, senão vira faixa de neve
+    for (let i = 0; i < VW; i += 4) {
+      const onda = Math.sin(i * 0.09 + this.t * 1.6) + Math.sin(i * 0.031 - this.t);
+      if (onda < 0.2) continue;
+      ret(ctx, i, SOLO - 1 - Math.round(onda), 4, 1 + Math.round(onda), '#dff4ff');
+    }
 
     // --- os dois ---
+    // Um pouco maiores que no jogo: aqui eles são o assunto da tela, não
+    // uma peça do cenário.
     const bob = Math.sin(this.t * 1.6) * 1.2;
-    if (bonecos.ele) bonecos.ele.desenhar(ctx, 78, VH - 18 + bob, 1);
-    if (bonecos.ela) bonecos.ela.desenhar(ctx, 108, VH - 18 - bob, -1);
+    const pe = SOLO + 56;
+    const ESC = 1.35;
+    ctx.save();
+    ctx.scale(ESC, ESC);
+    if (bonecos.ele) bonecos.ele.desenhar(ctx, 62 / ESC, (pe + bob) / ESC, 1);
+    if (bonecos.ela) bonecos.ela.desenhar(ctx, 100 / ESC, (pe - bob) / ESC, -1);
+    ctx.restore();
     // coraçãozinho pulando entre os dois
     const hp = Math.abs(Math.sin(this.t * 2.2));
-    coracao(ctx, 93, VH - 66 - hp * 5, 4 + hp * 1.5, COR.coracao, COR.coracaoHi);
+    coracao(ctx, 81, pe - 66 - hp * 5, 5 + hp * 1.5, COR.coracao, COR.coracaoHi);
 
     // --- título ---
     const ent = easeBack(clamp(this.t / 0.9, 0, 1));
@@ -74,9 +90,9 @@ export class Titulo {
 
     // --- opções ---
     const ox = VW - 130;
-    const oy = 96;
+    const oy = 88;
     for (let i = 0; i < this.opcoes.length; i++) {
-      const y = oy + i * 20;
+      const y = oy + i * 19;
       const ativo = i === this.sel;
       const ap = clamp((this.t - 0.9 - i * 0.09) / 0.3, 0, 1);
       if (ap <= 0) continue;

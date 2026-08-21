@@ -52,10 +52,10 @@ export class Album {
 
     text(ctx, 'ÁLBUM', VW / 2, 8,
       { size: 16, font: 'titulo', align: 'center', color: COR.uiDestaque, outline: 1 });
-    text(ctx, `${this.coletadas.size} de ${MEMORIAS.length} memórias`, VW / 2, 28,
+    text(ctx, `${this.coletadas.size} de ${MEMORIAS.length} memórias`, VW / 2, 26,
       { size: 9, align: 'center', color: COR.uiDim });
 
-    const cw = 106, ch = 40, gx = 14, gy = 44;
+    const cw = 106, ch = 40, gx = 14, gy = 46;
     for (let i = 0; i < MEMORIAS.length; i++) {
       const m = MEMORIAS[i];
       const col = i % COLS, lin = Math.floor(i / COLS);
