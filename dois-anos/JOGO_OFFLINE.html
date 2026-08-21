@@ -4433,9 +4433,13 @@ const DATAS = {
 // AS MEMÓRIAS
 // ---------------------------------------------------------------------------
 // Cada carta espalhada pelas fases abre uma destas. `mundo` diz em qual das
-// quatro fases ela aparece (1 a 4). Pode ter quantas quiser em cada mundo —
-// o jogo distribui as cartas do mundo pelos pontos de coleta na ordem em que
-// estão aqui, e se sobrarem pontos de coleta ele não coloca carta neles.
+// quatro fases ela aparece (1 a 4).
+//
+// PODE TER QUANTAS QUISER EM CADA MUNDO. Cada fase tem quatro pontos de
+// carta desenhados à mão, mas o jogo se ajusta nos dois sentidos: se você
+// escrever menos de quatro, os pontos que sobram viram coração; se escrever
+// mais, corações espalhados pela fase viram carta. Nenhuma memória fica
+// inalcançável e o álbum sempre fecha.
 //
 // `titulo` é curto (cabe em uma linha). `texto` pode ter até umas 4 linhas;
 // use \n para quebrar onde você quiser.
@@ -4946,6 +4950,7 @@ function faseFloresta() {
   c.inimigo(99, CH - 10, 'vagalume', 6);
   c.espinhos(97, 99, CH - 5);
   c.plat(95, CH - 6, 6);        // ponte por cima dos espinhos
+  c.carta(97, CH - 8);
   c.enfeite('tronco', 101, CH - 4, false);
 
   // corredor de vaga-lumes
@@ -5124,7 +5129,8 @@ function faseCeu() {
   c.mola(46, B - 15);
   c.inimigo(44, B - 14, 'nuvenzinha', 5);
   c.plat(44, B - 21, 5);       // a mola sobe 8 tiles, sobra folga
-  c.trilha(46, B - 19, 3);
+  c.trilha(46, B - 23, 3);
+  c.carta(48, B - 23);
 
   // nuvens frágeis: pisou, tem meio segundo
   c.fragil(52, B - 21, 3);
@@ -5173,8 +5179,13 @@ function construirFase(n) {
   const tema = TEMAS[nomeTema];
 
   // As cartas do mapa recebem, na ordem, as memórias escritas em
-  // personalizacao.js. Se houver mais pontos que memórias, os pontos que
-  // sobram viram coração — melhor do que uma carta vazia.
+  // personalizacao.js.
+  //
+  // O número de memórias por mundo é livre, e as duas sobras são tratadas:
+  // se sobrar PONTO, ele vira coração (melhor que carta vazia); se sobrar
+  // MEMÓRIA, um coração espaçado vira carta. Sem isso, escrever seis
+  // memórias num mundo com quatro pontos deixaria duas inalcançáveis para
+  // sempre, e o álbum nunca fecharia.
   const mems = memoriasDoMundo(n);
   let k = 0;
   for (const it of c.itens) {
@@ -5182,6 +5193,15 @@ function construirFase(n) {
     if (k < mems.length) it.memoria = mems[k++];
     else it.tipo = 'coracao';
   }
+  if (k < mems.length) {
+    const corações = c.itens.filter(i => i.tipo === 'coracao');
+    const passo = Math.max(1, Math.floor(corações.length / (mems.length - k + 1)));
+    for (let i = 0; k < mems.length && i < corações.length; i += passo) {
+      corações[i].tipo = 'carta';
+      corações[i].memoria = mems[k++];
+    }
+  }
+  const totalCartas = c.itens.filter(i => i.tipo === 'carta').length;
 
   return {
     numero: n,
@@ -5198,7 +5218,7 @@ function construirFase(n) {
     dicas: c.dicas,
     gaiola: c.gaiola,
     inicio: c.inicio,
-    totalCartas: mems.length,
+    totalCartas,
   };
 }
 

@@ -31,9 +31,13 @@ export const DATAS = {
 // AS MEMÓRIAS
 // ---------------------------------------------------------------------------
 // Cada carta espalhada pelas fases abre uma destas. `mundo` diz em qual das
-// quatro fases ela aparece (1 a 4). Pode ter quantas quiser em cada mundo —
-// o jogo distribui as cartas do mundo pelos pontos de coleta na ordem em que
-// estão aqui, e se sobrarem pontos de coleta ele não coloca carta neles.
+// quatro fases ela aparece (1 a 4).
+//
+// PODE TER QUANTAS QUISER EM CADA MUNDO. Cada fase tem quatro pontos de
+// carta desenhados à mão, mas o jogo se ajusta nos dois sentidos: se você
+// escrever menos de quatro, os pontos que sobram viram coração; se escrever
+// mais, corações espalhados pela fase viram carta. Nenhuma memória fica
+// inalcançável e o álbum sempre fecha.
 //
 // `titulo` é curto (cabe em uma linha). `texto` pode ter até umas 4 linhas;
 // use \n para quebrar onde você quiser.
