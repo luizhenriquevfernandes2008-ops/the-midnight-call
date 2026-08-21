@@ -14,7 +14,10 @@
 import { clamp, lerp } from '../core/gfx.js';
 import { Boneco } from '../art/rig.js';
 
-const DIST = 26;          // pixels atrás dela
+// Distância que ele mantém. Com 26 os dois se sobrepunham na tela e pareciam
+// um personagem só de dois corpos; 36 deixa uma folga que lê como "andando
+// junto" sem virar "andando longe".
+const DIST = 36;          // pixels atrás dela
 const MAX_RASTRO = 260;
 
 export class Companheiro {
