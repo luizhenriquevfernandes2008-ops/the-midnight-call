@@ -9,6 +9,7 @@ import { texto, retanguloRedondo } from '../nucleo/gfx.js';
 import { desenhaIcone } from './icones.js';
 import { limita, TAU } from '../nucleo/util.js';
 import { D } from '../nucleo/dados.js';
+import { textoContornado } from '../arte/pincel.js';
 
 export function desenharHud(ctx, jogo) {
   const c = jogo.cobra;
@@ -32,6 +33,13 @@ export function desenharHud(ctx, jogo) {
     ? 'CAMARA DO CHEFE'
     : 'SALA ' + (r.sala + 1) + ' / ' + r.salasNoAndar;
   texto(ctx, salaTxt, 24, 41, { tam: 12, cor: 'rgba(200,190,175,0.7)', espaco: 2 });
+
+  // ---- OBJETIVO: a linha mais importante da tela ----
+  //
+  // O jogador da primeira versao nao sabia o que fazer nem como sair da
+  // sala. Isto responde as duas perguntas o tempo todo, no meio de cima,
+  // onde o olho passa: quantos bichos faltam, ou que a saida abriu.
+  desenharObjetivo(ctx, jogo, t);
 
   // ---- vida ----
   const vx = 24, vy = 68;
@@ -134,6 +142,43 @@ export function desenharHud(ctx, jogo) {
   }
 
   ctx.restore();
+}
+
+function desenharObjetivo(ctx, jogo, t) {
+  const vivos = jogo.inimigos.filter(i => !i.morto).length;
+  let txt, cor, piscando = false;
+
+  if (jogo.chefe && !jogo.chefe.morto) {
+    txt = 'MATE O CHEFE';
+    cor = '#ff8a7a';
+  } else if (vivos > 0) {
+    txt = vivos === 1 ? 'FALTA 1 INIMIGO' : 'FALTAM ' + vivos + ' INIMIGOS';
+    cor = '#ffd07a';
+  } else if (jogo.arena.porta) {
+    txt = 'SAIDA ABERTA — SIGA A SETA';
+    cor = '#c89aff';
+    piscando = true;
+  } else {
+    txt = 'SALA LIMPA';
+    cor = '#8affb0';
+  }
+
+  const alfa = piscando ? 0.72 + 0.28 * Math.sin(t * 4) : 1;
+  const w = 300, x = 480 - w / 2, y = 12;
+  ctx.save();
+  ctx.globalAlpha = 0.55;
+  ctx.fillStyle = 'rgba(6,4,10,0.85)';
+  retanguloRedondo(ctx, x, y, w, 26, 13);
+  ctx.fill();
+  ctx.strokeStyle = cor;
+  ctx.globalAlpha = 0.35;
+  ctx.lineWidth = 1.2;
+  ctx.stroke();
+  ctx.restore();
+
+  textoContornado(ctx, txt, 480, y + 14, {
+    tam: 15, espaco: 2.5, cor, largura: 3.5, alfa,
+  });
 }
 
 function barra(ctx, x, y, w, h, frac, cor, fundo) {

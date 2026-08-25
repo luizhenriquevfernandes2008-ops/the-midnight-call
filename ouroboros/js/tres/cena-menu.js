@@ -19,6 +19,7 @@ import { motor } from './motor3d.js';
 import * as M from './matriz.js';
 import { texturaPlaca, texturaTitulo, texturaPainel } from './textura-texto.js';
 import { audio } from '../nucleo/audio.js';
+import { gfx } from '../nucleo/gfx.js';
 import { entrada } from '../nucleo/entrada.js';
 import { D } from '../nucleo/dados.js';
 import { salvar } from '../nucleo/salvar.js';
@@ -326,6 +327,11 @@ function texturaPlacaCompleta(rotulo, sub, valor, ativa, w, h, tam) {
 
 // ---------- a cena ----------
 
+// Escadinha de resolucao. O buffer de desenho e 960x540 vezes este numero,
+// entao cada degrau mexe de verdade no custo por quadro.
+const NITIDEZ = [0.75, 1, 1.25, 1.5, 2];
+const NOMES_NITIDEZ = ['MUITO RAPIDO', 'RAPIDO', 'EQUILIBRADO', 'NITIDO', 'MAXIMO'];
+
 const CORES = {
   acento: [1.0, 0.16, 0.36],
   serpente: [0.36, 0.12, 0.22],
@@ -357,12 +363,19 @@ class CenaMenu {
     this.aviso = '';
     this.avisoTempo = 0;
     this.pronta = false;
+    // Matrizes reaproveitadas. Alocar Float32Array dentro do laco de
+    // desenho da trabalho ao coletor de lixo sessenta vezes por segundo, e
+    // coletor rodando no meio de uma animacao aparece como engasgo.
+    this.mChao = new Float32Array(16);
+    this.mPainel = new Float32Array(16);
+    this.mTitulo = new Float32Array(16);
+    this.fundoPronto = null;
   }
 
   iniciar() {
     if (this.pronta) return;
     this.brasas = new Brasas(340);
-    this.anel = new Anel(74);
+    this.anel = new Anel(52);
     this.tituloTex = texturaTitulo(D.textos.jogo.titulo, { tam: 200, espaco: 16 });
     this.pronta = true;
     this.abrir('principal', true);
@@ -453,8 +466,15 @@ class CenaMenu {
       add({ rotulo: 'MUSICA', valor: nivelPara(o.musica), acao: 'vol:musica', x: 0, y: 0.95, z: 0, largura: 5.4, altura: 0.72 });
       add({ rotulo: 'EFEITOS', valor: nivelPara(o.efeitos), acao: 'vol:efeitos', x: 0, y: 0.05, z: 0, largura: 5.4, altura: 0.72 });
       add({ rotulo: 'TREMOR DE TELA', valor: nivelPara(o.tremor), acao: 'vol:tremor', x: 0, y: -0.85, z: 0, largura: 5.4, altura: 0.72 });
-      add({ rotulo: 'APAGAR TUDO', sub: 'essencia, altar, recordes e compendio', acao: 'apagar', x: 0, y: -1.85, z: 0, largura: 5.4, altura: 0.78 });
-      add({ rotulo: D.textos.menu.voltar, acao: 'voltar', x: 0, y: -2.9, z: 0, largura: 3.0, altura: 0.68 });
+      const iq = NITIDEZ.indexOf(gfx.qualidade);
+      add({
+        rotulo: 'NITIDEZ',
+        sub: NOMES_NITIDEZ[iq < 0 ? 2 : iq] + ' — menos nitidez, mais velocidade',
+        valor: { cheios: (iq < 0 ? 2 : iq) + 1, total: NITIDEZ.length },
+        acao: 'nitidez', x: 0, y: -1.85, z: 0, largura: 5.4, altura: 0.8,
+      });
+      add({ rotulo: 'APAGAR TUDO', sub: 'essencia, altar, recordes e compendio', acao: 'apagar', x: 0, y: -2.75, z: 0, largura: 5.4, altura: 0.78 });
+      add({ rotulo: D.textos.menu.voltar, acao: 'voltar', x: 0, y: -3.6, z: 0, largura: 3.0, altura: 0.66 });
     }
 
     else if (pagina === 'creditos') {
@@ -605,7 +625,7 @@ class CenaMenu {
       this.painelSujo = true;
       return;
     }
-    if (a.startsWith('vol:')) { this.ajustar(1); return; }
+    if (a.startsWith('vol:') || a === 'nitidez') { this.ajustar(1); return; }
     if (a === 'apagar') {
       if (this.confirmandoApagar) {
         salvar.apagar(); salvar.gravar();
@@ -628,7 +648,23 @@ class CenaMenu {
 
   ajustar(dir) {
     const sel = this.itemSelecionado();
-    if (!sel || !sel.acao || !sel.acao.startsWith('vol:')) return;
+    if (!sel || !sel.acao) return;
+
+    if (sel.acao === 'nitidez') {
+      let i = NITIDEZ.indexOf(gfx.qualidade);
+      if (i < 0) i = 2;
+      i = (i + dir + NITIDEZ.length) % NITIDEZ.length;
+      gfx.definirQualidade(NITIDEZ[i]);
+      salvar.dados.opcoes.qualidade = NITIDEZ[i];
+      salvar.gravar();
+      audio.passar();
+      this.itens = this.construir('opcoes');
+      this.indice = this.itens.findIndex(it => it.acao === 'nitidez');
+      this.mostrarAviso('Nitidez: ' + NOMES_NITIDEZ[i] + '. Se o jogo estiver travando, desca um nivel.');
+      return;
+    }
+
+    if (!sel.acao.startsWith('vol:')) return;
     const chave = sel.acao.slice(4);
     const o = salvar.dados.opcoes;
     let v = (o[chave] ?? 0.5) + dir * 0.1;
@@ -677,7 +713,7 @@ class CenaMenu {
     this.anel.desenhar(this.tempo, CORES.serpente, CORES.luz);
 
     // chao: uma placa enorme deitada, so para a nevoa ter onde morrer
-    const chao = M.identidade(new Float32Array(16));
+    const chao = M.identidade(this.mChao);
     M.transladar(chao, 0, -3.9, -18);
     M.girarX(chao, -Math.PI / 2);
     M.escalar(chao, 120, 120, 1);
@@ -690,7 +726,7 @@ class CenaMenu {
     for (const p of this.itens) p.desenhar(this.tempo, CORES.acento);
 
     if (this.painel) {
-      const m = M.identidade(new Float32Array(16));
+      const m = M.identidade(this.mPainel);
       if (this.pagina === 'compendio') {
         M.transladar(m, 2.75 + this.cam.x * 0.1, 0.35, -0.4);
         M.girarY(m, -0.22 + (this.mouse.x - 0.5) * 0.06);
@@ -720,7 +756,7 @@ class CenaMenu {
     const camadas = 7;
     for (let i = camadas - 1; i >= 0; i--) {
       const z = -1.4 - i * 0.09;
-      const m = M.identidade(new Float32Array(16));
+      const m = M.identidade(this.mTitulo);
       M.transladar(m, 0, 2.98 + respira, z);
       M.girarY(m, Math.sin(this.tempo * 0.45) * 0.06 + (this.mouse.x - 0.5) * 0.1);
       M.girarX(m, -0.05 + Math.cos(this.tempo * 0.6) * 0.015);
@@ -738,22 +774,28 @@ class CenaMenu {
     }
   }
 
-  // fundo pintado no canvas 2D que fica ATRAS do WebGL
+  // Fundo do menu. Era dois gradientes NOVOS por quadro; agora e uma imagem
+  // pintada uma vez e copiada, mais o que de fato se mexe.
   fundo2D(ctx) {
-    const g = ctx.createLinearGradient(0, 0, 0, 540);
-    g.addColorStop(0, '#07040a');
-    g.addColorStop(0.55, '#0d0510');
-    g.addColorStop(1, '#160616');
-    ctx.fillStyle = g;
-    ctx.fillRect(0, 0, 960, 540);
-
-    const r = ctx.createRadialGradient(480, 620, 30, 480, 620, 620);
-    const pulsa = 0.16 + Math.sin(this.tempo * 0.7) * 0.04 + this.energia * 0.1;
-    r.addColorStop(0, 'rgba(255,40,80,' + pulsa + ')');
-    r.addColorStop(0.45, 'rgba(120,10,40,' + pulsa * 0.35 + ')');
-    r.addColorStop(1, 'rgba(0,0,0,0)');
-    ctx.fillStyle = r;
-    ctx.fillRect(0, 200, 960, 340);
+    if (!this.fundoPronto) {
+      const c = document.createElement('canvas');
+      c.width = 960; c.height = 540;
+      const x = c.getContext('2d');
+      const g = x.createLinearGradient(0, 0, 0, 540);
+      g.addColorStop(0, '#07040a');
+      g.addColorStop(0.55, '#0d0510');
+      g.addColorStop(1, '#160616');
+      x.fillStyle = g;
+      x.fillRect(0, 0, 960, 540);
+      const r = x.createRadialGradient(480, 620, 30, 480, 620, 620);
+      r.addColorStop(0, 'rgba(255,40,80,0.2)');
+      r.addColorStop(0.45, 'rgba(120,10,40,0.07)');
+      r.addColorStop(1, 'rgba(0,0,0,0)');
+      x.fillStyle = r;
+      x.fillRect(0, 200, 960, 340);
+      this.fundoPronto = c;
+    }
+    ctx.drawImage(this.fundoPronto, 0, 0, 960, 540);
 
     // arcos concentricos, como ondas na agua parada do fundo do poco
     ctx.save();

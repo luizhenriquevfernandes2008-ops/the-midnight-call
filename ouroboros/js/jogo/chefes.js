@@ -9,6 +9,7 @@
 // ataques e a lista do que ele pode fazer mudam conforme apanha.
 
 import { TAU, limita, distGrade, dist, sorteia, chance } from '../nucleo/util.js';
+import { luz, sombraChao, CONTORNO } from '../arte/pincel.js';
 
 export class Chefe {
   constructor(def, jogo) {
@@ -632,14 +633,8 @@ export class Chefe {
     const s = arena.celula * this.tamanho;
     const cor = this.flash > 0.02 ? 'rgba(255,255,255,' + (0.5 + this.flash * 0.5) + ')' : this.def.cor;
 
-    ctx.save();
-    ctx.globalCompositeOperation = 'lighter';
-    const g = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, s);
-    g.addColorStop(0, hexA(this.def.brilho, this.disperso > 0 ? 0.12 : 0.3));
-    g.addColorStop(1, hexA(this.def.brilho, 0));
-    ctx.fillStyle = g;
-    ctx.fillRect(p.x - s, p.y - s, s * 2, s * 2);
-    ctx.restore();
+    sombraChao(ctx, p.x, p.y + s * 0.42, s * 0.5, s * 0.2, 0.9);
+    luz(ctx, p.x, p.y, s * 0.95, this.def.brilho, this.disperso > 0 ? 0.16 : 0.42);
 
     ctx.save();
     if (this.disperso > 0) ctx.globalAlpha = 0.4;
@@ -811,27 +806,41 @@ function desenharChefe(ctx, id, x, y, s, cor, brilho, tempo, chefe) {
   ctx.translate(x, y);
   ctx.fillStyle = cor;
   ctx.strokeStyle = cor;
+  ctx.lineJoin = 'round';
   const r = s * 0.5;
   const t = tempo * 2;
+  // Mesmo contorno grosso dos bichos pequenos: o chefe e enorme e cheio de
+  // efeito em volta, e sem recorte ele vira mancha.
+  const traco = Math.max(2.5, s * 0.028);
+  const fp = () => {
+    const guardado = ctx.strokeStyle;
+    const larg = ctx.lineWidth;
+    ctx.fill();
+    ctx.strokeStyle = CONTORNO;
+    ctx.lineWidth = traco;
+    ctx.stroke();
+    ctx.strokeStyle = guardado;
+    ctx.lineWidth = larg;
+  };
 
   if (id === 'mae_dos_ovos') {
     ctx.beginPath();
     ctx.ellipse(0, r * 0.15, r * 0.92, r * 0.82 + Math.sin(t) * r * 0.05, 0, 0, TAU);
-    ctx.fill();
+    fp();
     ctx.fillStyle = hexA(brilho, 0.5);
     for (let i = 0; i < 5; i++) {
       const a = (i / 5) * TAU + t * 0.3;
       ctx.beginPath();
       ctx.ellipse(Math.cos(a) * r * 0.5, r * 0.2 + Math.sin(a) * r * 0.35, r * 0.19, r * 0.24, a, 0, TAU);
-      ctx.fill();
+      fp();
     }
     ctx.fillStyle = cor;
     ctx.beginPath();
     ctx.ellipse(0, -r * 0.68, r * 0.42, r * 0.36, 0, 0, TAU);
-    ctx.fill();
+    fp();
     ctx.fillStyle = brilho;
     for (const lx of [-0.2, 0.2]) {
-      ctx.beginPath(); ctx.ellipse(lx * r, -r * 0.72, r * 0.08, r * 0.12, 0, 0, TAU); ctx.fill();
+      ctx.beginPath(); ctx.ellipse(lx * r, -r * 0.72, r * 0.08, r * 0.12, 0, 0, TAU); fp();
     }
   } else if (id === 'o_afogado') {
     ctx.beginPath();
@@ -842,12 +851,12 @@ function desenharChefe(ctx, id, x, y, s, cor, brilho, tempo, chefe) {
       const px = -r * 0.8 + (i / 4) * r * 1.6;
       ctx.quadraticCurveTo(px + r * 0.16, r * (0.7 + Math.sin(t + i) * 0.22), px, r);
     }
-    ctx.closePath(); ctx.fill();
+    ctx.closePath(); fp();
     ctx.fillStyle = '#04100f';
-    ctx.beginPath(); ctx.ellipse(0, -r * 0.3, r * 0.46, r * 0.42, 0, 0, TAU); ctx.fill();
+    ctx.beginPath(); ctx.ellipse(0, -r * 0.3, r * 0.46, r * 0.42, 0, 0, TAU); fp();
     ctx.fillStyle = brilho;
     for (const lx of [-0.2, 0.2]) {
-      ctx.beginPath(); ctx.arc(lx * r, -r * 0.34, r * 0.1, 0, TAU); ctx.fill();
+      ctx.beginPath(); ctx.arc(lx * r, -r * 0.34, r * 0.1, 0, TAU); fp();
     }
     ctx.strokeStyle = hexA(brilho, 0.55);
     ctx.lineWidth = 2.5;
@@ -862,7 +871,7 @@ function desenharChefe(ctx, id, x, y, s, cor, brilho, tempo, chefe) {
     ctx.fillStyle = hexA('#000000', 0.5);
     ctx.fillRect(-r * 0.72, -r * 0.5, r * 1.44, r * 0.2);
     ctx.fillStyle = cor;
-    ctx.beginPath(); ctx.ellipse(0, -r * 0.75, r * 0.42, r * 0.38, 0, 0, TAU); ctx.fill();
+    ctx.beginPath(); ctx.ellipse(0, -r * 0.75, r * 0.42, r * 0.38, 0, 0, TAU); fp();
     ctx.strokeStyle = hexA('#2a1408', 0.9);
     ctx.lineWidth = r * 0.18;
     ctx.beginPath(); ctx.moveTo(-r * 0.5, -r * 0.78); ctx.lineTo(r * 0.5, -r * 0.7); ctx.stroke();
@@ -876,7 +885,7 @@ function desenharChefe(ctx, id, x, y, s, cor, brilho, tempo, chefe) {
     ctx.fillRect(r * 1.3, -r * 0.28, r * 0.38, r * 0.56);
     ctx.restore();
     ctx.fillStyle = hexA(brilho, 0.35 + 0.3 * Math.sin(t * 3));
-    ctx.beginPath(); ctx.arc(0, r * 0.3, r * 0.3, 0, TAU); ctx.fill();
+    ctx.beginPath(); ctx.arc(0, r * 0.3, r * 0.3, 0, TAU); fp();
   } else if (id === 'o_enxame') {
     const n = 22;
     for (let i = 0; i < n; i++) {
@@ -885,22 +894,22 @@ function desenharChefe(ctx, id, x, y, s, cor, brilho, tempo, chefe) {
       ctx.fillStyle = i % 3 ? cor : brilho;
       ctx.beginPath();
       ctx.ellipse(Math.cos(a) * rr, Math.sin(a) * rr * 0.9, r * 0.15, r * 0.11, a, 0, TAU);
-      ctx.fill();
+      fp();
     }
     ctx.fillStyle = hexA(brilho, 0.75);
-    ctx.beginPath(); ctx.arc(0, 0, r * 0.3 + Math.sin(t * 4) * r * 0.05, 0, TAU); ctx.fill();
+    ctx.beginPath(); ctx.arc(0, 0, r * 0.3 + Math.sin(t * 4) * r * 0.05, 0, TAU); fp();
   } else if (id === 'o_ceifador') {
     ctx.beginPath();
     ctx.moveTo(0, -r * 1.05);
     ctx.quadraticCurveTo(r * 0.95, -r * 0.1, r * 0.66, r);
     ctx.lineTo(-r * 0.66, r);
     ctx.quadraticCurveTo(-r * 0.95, -r * 0.1, 0, -r * 1.05);
-    ctx.closePath(); ctx.fill();
+    ctx.closePath(); fp();
     ctx.fillStyle = '#000';
-    ctx.beginPath(); ctx.ellipse(0, -r * 0.42, r * 0.42, r * 0.46, 0, 0, TAU); ctx.fill();
+    ctx.beginPath(); ctx.ellipse(0, -r * 0.42, r * 0.42, r * 0.46, 0, 0, TAU); fp();
     ctx.fillStyle = brilho;
     for (const lx of [-0.16, 0.16]) {
-      ctx.beginPath(); ctx.ellipse(lx * r, -r * 0.44, r * 0.1, r * 0.16, 0, 0, TAU); ctx.fill();
+      ctx.beginPath(); ctx.ellipse(lx * r, -r * 0.44, r * 0.1, r * 0.16, 0, 0, TAU); fp();
     }
     // foice
     ctx.save();

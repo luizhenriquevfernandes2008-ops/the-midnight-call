@@ -28,6 +28,7 @@ import { Corrida } from './corrida.js';
 import { Fx } from './fx.js';
 import { acharCercados } from './constricao.js';
 import { desenharHud } from '../ui/hud.js';
+import { luz, sombraChao, pintar, textoContornado, CONTORNO } from '../arte/pincel.js';
 import * as Telas from '../ui/telas.js';
 import { cartas3d } from '../tres/cena-cartas.js';
 
@@ -244,19 +245,32 @@ export class Jogo {
     if (this.ultimasDirecoes.length > 80) this.ultimasDirecoes.shift();
     this.corrida.maiorCorpo = Math.max(this.corrida.maiorCorpo, this.cobra.comprimento);
 
-    // morder o que estiver na celula
+    // MORDER. Regra nova, e a mais importante do combate: quem chega
+    // primeiro ganha a troca. Passar por cima de um bicho MACHUCA ELE e nao
+    // machuca voce. Antes era mutuo — e como cada bicho tinha mais vida que
+    // voce, atacar era sempre um mau negocio, o que deixava o jogador sem
+    // saber o que fazer com a sala inteira.
+    //
+    // O perigo continua existindo, mas vem do lado certo: bicho que anda em
+    // cima da SUA cabeca (ver aoAndarInimigo), tiro, explosao e salto.
     const bicho = this.inimigoEm(cx, cy);
     if (bicho) {
       const dano = (this.cobra.devorando() ? D.config.cobra.devorar.dano : this.danoMordida())
-        * (emBote ? 1.6 : 1);
+        * (emBote ? 1.7 : 1);
       this.ferirInimigo(bicho, dano, 'mordida');
-      if (!this.cobra.devorando() && !this.cobra.invulneravel() && !emBote) {
-        this.cobra.levarDano(this, bicho.dano, 'contato');
-      }
+      this.cobra.morder();
+      this.empurrar(bicho, this.cobra.dir);
+      this.fx.emitir(this.arena.px(cx), this.arena.py(cy), {
+        n: 7, cor: '#fff0c0', vel: 150, vida: 0.22, tam: 2.6,
+        angulo: Math.atan2(this.cobra.dir.y, this.cobra.dir.x), espalha: 1.5,
+      });
+      this.fx.sacudir(3);
     }
     const chefe = this.chefeEm(cx, cy);
     if (chefe) {
-      this.ferirInimigo(chefe, this.danoMordida() * (emBote ? 1.6 : 1), 'mordida');
+      this.ferirInimigo(chefe, this.danoMordida() * (emBote ? 1.7 : 1), 'mordida');
+      this.cobra.morder();
+      this.fx.sacudir(4);
     }
 
     // perigo do chao
@@ -290,6 +304,18 @@ export class Jogo {
         this.avisar(D.textos.aviso.severado);
       }
     }
+  }
+
+  // Empurra o bicho uma celula para longe. Duas razoes: a mordida ganha
+  // peso (o corpo do bicho reage) e a cobra nao fica presa mordendo o mesmo
+  // alvo no mesmo lugar quadro apos quadro.
+  empurrar(bicho, dir) {
+    const nx = bicho.cx + dir.x, ny = bicho.cy + dir.y;
+    if (!this.arena.livre(nx, ny)) return;
+    if (this.inimigoEm(nx, ny)) return;
+    bicho.ax = bicho.cx; bicho.ay = bicho.cy;
+    bicho.cx = nx; bicho.cy = ny;
+    bicho.acumulado = 0;
   }
 
   danoMordida() {
@@ -598,6 +624,56 @@ export class Jogo {
     }
   }
 
+  // REDE DE SEGURANCA CONTRA SALA IMPOSSIVEL.
+  //
+  // A sala so abre a porta quando todo bicho morre. Basta um bicho ficar
+  // fora de alcance — atras de um muro que um chefe ergueu, dentro de pedra,
+  // num bolsao que a geracao fechou — para o andar inteiro virar uma prisao.
+  // Uma vez por segundo a gente varre o que a cabeca da cobra consegue
+  // alcancar e traz de volta quem ficou de fora. E melhor um bicho aparecer
+  // do nada do que o jogo travar sem explicacao.
+  resgatarInimigosPresos() {
+    const arena = this.arena;
+    const cols = arena.cols, rows = arena.rows, n = cols * rows;
+    const cab = this.cobra.cabeca;
+    if (!cab) return;
+    const vis = new Uint8Array(n);
+    const fila = new Int32Array(n);
+    let cabeca = 0, cauda = 0;
+    const inicio = cab.cy * cols + cab.cx;
+    if (arena.parede(cab.cx, cab.cy)) return;
+    vis[inicio] = 1; fila[cauda++] = inicio;
+    while (cabeca < cauda) {
+      const at = fila[cabeca++];
+      const x = at % cols, y = (at / cols) | 0;
+      for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
+        const nx = x + dx, ny = y + dy;
+        if (!arena.dentro(nx, ny)) continue;
+        const ni = ny * cols + nx;
+        if (vis[ni] || arena.parede(nx, ny)) continue;
+        vis[ni] = 1; fila[cauda++] = ni;
+      }
+    }
+    this.celulasAlcancaveis = fila.subarray(0, cauda);
+
+    for (const b of this.inimigos) {
+      if (b.morto) continue;
+      const dentro = arena.dentro(b.cx, b.cy) && vis[b.cy * cols + b.cx];
+      if (dentro) { b.presoDesde = 0; continue; }
+      b.presoDesde = (b.presoDesde || this.tempo);
+      if (this.tempo - b.presoDesde < 2.5) continue;   // pode ser so travessia
+      const idx = this.celulasAlcancaveis[
+        Math.floor(Math.random() * this.celulasAlcancaveis.length)];
+      const nx = idx % cols, ny = (idx / cols) | 0;
+      const p = { x: arena.px(b.cx), y: arena.py(b.cy) };
+      this.fx.emitir(p.x, p.y, { n: 8, cor: b.def.brilho, vel: 120, vida: 0.4, tam: 2.6 });
+      b.cx = nx; b.cy = ny; b.ax = nx; b.ay = ny;
+      b.presoDesde = 0;
+      this.fx.emitir(arena.px(nx), arena.py(ny),
+        { n: 10, cor: b.def.brilho, vel: 140, vida: 0.5, tam: 3 });
+    }
+  }
+
   atualizarJogo(dt) {
     if (entrada.nova('menu')) {
       this.estado = 'pausa';
@@ -611,6 +687,9 @@ export class Jogo {
     if (entrada.nova('furia')) this.cobra.usarFuria(this);
 
     this.atualizarMundo(dt);
+
+    this.contaResgate = (this.contaResgate || 0) + dt;
+    if (this.contaResgate > 1) { this.contaResgate = 0; this.resgatarInimigosPresos(); }
 
     // sala limpa: abre a porta
     const vivos = this.inimigos.filter(i => !i.morto).length;
@@ -744,6 +823,7 @@ export class Jogo {
     this.arena.desenhar(ctx, this.tempo);
     this.desenharCerco(ctx);
     this.desenharPorta(ctx);
+    this.desenharGuia(ctx);
 
     for (const it of this.itens) it.desenhar(ctx, this.arena, this.tempo);
     for (const b of this.inimigos) b.desenhar(ctx, this.arena, this.tempo);
@@ -780,7 +860,7 @@ export class Jogo {
     if (this.estado === 'vitoria') Telas.telaVitoria(frente, this, this.tVitoria);
     if (this.mostrarTutorial > 0 && this.estado === 'jogando') {
       Telas.telaTutorial(frente, this, this.mostrarTutorial);
-      if (this.mostrarTutorial > 11) this.mostrarTutorial = 0;
+      if (this.mostrarTutorial > 29) this.mostrarTutorial = 0;
     }
     if (this.estado === 'recompensa') cartas3d.frente2D(frente);
   }
@@ -799,34 +879,95 @@ export class Jogo {
     ctx.restore();
   }
 
+  // A PORTA. Na primeira versao era uma manchinha roxa com a palavra
+  // "DESCER" em corpo 11 — o jogador terminava a sala e ficava rodando sem
+  // saber para onde ir. Agora ela e a coisa mais chamativa da tela: um poco
+  // de luz no chao, um anel girando, faisca subindo, e uma seta gigante que
+  // aponta para ela a partir da cabeca da cobra.
   desenharPorta(ctx) {
     const p = this.arena.porta;
     if (!p) return;
     const x = this.arena.px(p.cx), y = this.arena.py(p.cy);
     const c = this.arena.celula;
     const t = this.tempo;
+    const abriu = (this.arena.tempo - p.nascida) / 1000;
+    const surge = limita(abriu / 0.6, 0, 1);
+
     ctx.save();
-    ctx.globalCompositeOperation = 'lighter';
-    const g = ctx.createRadialGradient(x, y, 2, x, y, c * 1.6);
-    g.addColorStop(0, 'rgba(180,140,255,0.7)');
-    g.addColorStop(0.4, 'rgba(120,80,220,0.25)');
-    g.addColorStop(1, 'rgba(60,20,120,0)');
-    ctx.fillStyle = g;
-    ctx.fillRect(x - c * 1.6, y - c * 1.6, c * 3.2, c * 3.2);
+    luz(ctx, x, y, c * 3.4 * surge, '#b07aff', 0.55);
+
+    // boca do buraco
+    ctx.beginPath();
+    ctx.ellipse(x, y, c * 0.86 * surge, c * 0.62 * surge, 0, 0, TAU);
+    pintar(ctx, '#12061f', CONTORNO, 3);
+
+    // aneis girando para dentro: leem como "entra aqui"
     for (let i = 0; i < 3; i++) {
-      const f = ((t * 0.6 + i / 3) % 1);
-      ctx.strokeStyle = 'rgba(200,160,255,' + (0.5 * (1 - f)) + ')';
-      ctx.lineWidth = 2;
+      const f = ((t * 0.55 + i / 3) % 1);
+      ctx.globalAlpha = (1 - f) * 0.85 * surge;
+      ctx.strokeStyle = '#d2a8ff';
+      ctx.lineWidth = 2.5;
       ctx.beginPath();
-      ctx.arc(x, y, c * 0.3 + f * c * 1.1, 0, TAU);
+      ctx.ellipse(x, y, c * (0.2 + f * 1.5), c * (0.14 + f * 1.05), 0, 0, TAU);
       ctx.stroke();
     }
+    ctx.globalAlpha = 1;
+
+    // faisca subindo do buraco
+    for (let i = 0; i < 5; i++) {
+      const f = ((t * 0.7 + i / 5) % 1);
+      const px = x + Math.sin(t * 2 + i * 2.3) * c * 0.5;
+      ctx.globalAlpha = (1 - f) * 0.9 * surge;
+      ctx.fillStyle = '#e0c0ff';
+      ctx.fillRect(px - 1.5, y - f * c * 2.2, 3, 3 + f * 4);
+    }
+    ctx.globalAlpha = 1;
+
+    // seta e placa por cima
+    const bal = Math.sin(t * 3) * c * 0.14;
+    ctx.beginPath();
+    ctx.moveTo(x, y - c * 1.05 + bal);
+    ctx.lineTo(x - c * 0.4, y - c * 1.6 + bal);
+    ctx.lineTo(x - c * 0.16, y - c * 1.6 + bal);
+    ctx.lineTo(x - c * 0.16, y - c * 2.05 + bal);
+    ctx.lineTo(x + c * 0.16, y - c * 2.05 + bal);
+    ctx.lineTo(x + c * 0.16, y - c * 1.6 + bal);
+    ctx.lineTo(x + c * 0.4, y - c * 1.6 + bal);
+    ctx.closePath();
+    pintar(ctx, '#c89aff', CONTORNO, 2.5);
+
+    textoContornado(ctx, 'DESCER', x, y - c * 2.35 + bal, {
+      tam: 15, espaco: 2, cor: '#e8d4ff', largura: 4,
+    });
     ctx.restore();
+  }
+
+  // Seta guia: sai da cabeca da cobra e aponta para a porta. So aparece
+  // quando a sala esta limpa — antes disso ela mentiria sobre o objetivo.
+  desenharGuia(ctx) {
+    const p = this.arena.porta;
+    if (!p || !this.cobra.viva) return;
+    const cab = this.cobra.brilhoCabeca(this.arena);
+    const alvo = { x: this.arena.px(p.cx), y: this.arena.py(p.cy) };
+    const dx = alvo.x - cab.x, dy = alvo.y - cab.y;
+    const d = Math.hypot(dx, dy);
+    if (d < this.arena.celula * 2.5) return;
+    const a = Math.atan2(dy, dx);
+    const raio = this.arena.celula * 1.7 + Math.sin(this.tempo * 4) * 5;
+    const x = cab.x + Math.cos(a) * raio, y = cab.y + Math.sin(a) * raio;
+
+    const cc = this.arena.celula;
     ctx.save();
-    ctx.fillStyle = 'rgba(230,210,255,0.9)';
-    ctx.font = 'bold 11px "Trebuchet MS", sans-serif';
-    ctx.textAlign = 'center';
-    ctx.fillText('DESCER', x, y - c * 0.9);
+    ctx.translate(x, y);
+    ctx.rotate(a);
+    luz(ctx, 0, 0, cc * 1.1, '#b07aff', 0.5);
+    ctx.beginPath();
+    ctx.moveTo(cc * 0.85, 0);
+    ctx.lineTo(-cc * 0.25, -cc * 0.52);
+    ctx.lineTo(-cc * 0.02, 0);
+    ctx.lineTo(-cc * 0.25, cc * 0.52);
+    ctx.closePath();
+    pintar(ctx, '#d8b4ff', CONTORNO, 2.5);
     ctx.restore();
   }
 

@@ -11,6 +11,7 @@
 
 import { semente, inteiro, sorteia, chance, limita, misturaCor } from '../nucleo/util.js';
 import { buffer } from '../nucleo/gfx.js';
+import { luz, pintar, CONTORNO } from '../arte/pincel.js';
 
 export const VAZIO = 0;
 export const PAREDE = 1;
@@ -388,11 +389,17 @@ export class Arena {
         x.fillStyle = g2;
         x.fillRect(bx, by, c, c);
         if (temTopo) {
+          // Faixa de topo grossa e clara: e o que faz o bloco parecer que
+          // tem altura, e o que separa parede de chao a um metro da tela.
           x.fillStyle = p.paredeLuz;
-          x.fillRect(bx, by, c, Math.max(2, Math.round(c * 0.1)));
-          x.fillStyle = 'rgba(255,255,255,0.10)';
-          x.fillRect(bx, by, c, 1);
+          x.fillRect(bx, by, c, Math.max(3, Math.round(c * 0.22)));
+          x.fillStyle = 'rgba(255,255,255,0.16)';
+          x.fillRect(bx, by, c, 2);
         }
+        // contorno preto em volta do bloco inteiro
+        x.strokeStyle = 'rgba(4,2,8,0.75)';
+        x.lineWidth = 1.5;
+        x.strokeRect(bx + 0.75, by + 0.75, c - 1.5, c - 1.5);
         // quinas: claro a esquerda, escuro a direita — a luz vem de cima e
         // um pouco da esquerda, igual ao brilho do menu
         if (!this.parede(cx - 1, cy)) {
@@ -435,41 +442,65 @@ export class Arena {
 }
 
 export function desenharPerigo(ctx, nome, x, y, c, tempo, fase) {
+  // Perigo mora NO CHAO: sem sombra projetada, sem flutuar. E assim que o
+  // olho separa "piso ruim" de "bicho" sem precisar pensar.
+  //
+  // E nada de createRadialGradient aqui dentro: isto roda uma vez por
+  // celula, por quadro. Com quarenta celulas de fogo eram quarenta
+  // gradientes novos por quadro — um dos motivos do jogo travar.
   ctx.save();
   if (nome === 'espinho') {
-    const sobe = (Math.sin(tempo * 2.2 + fase) + 1) / 2;
-    ctx.fillStyle = 'rgba(20,10,14,0.55)';
-    ctx.fillRect(x + 2, y + 2, c - 4, c - 4);
-    ctx.fillStyle = 'rgba(190,110,120,' + (0.35 + sobe * 0.6) + ')';
+    // Espinho tem cor propria, fora da paleta do andar: perigo nao pode
+    // mudar de aparencia de fase para fase, senao o jogador reaprende do
+    // zero toda vez que desce um circulo.
+    const sobe = (Math.sin(tempo * 2.4 + fase) + 1) / 2;
+    ctx.fillStyle = 'rgba(12,6,10,0.8)';
+    ctx.beginPath();
+    ctx.ellipse(x + c / 2, y + c * 0.72, c * 0.42, c * 0.16, 0, 0, Math.PI * 2);
+    ctx.fill();
+    const h = c * 0.62 * (0.35 + sobe * 0.65);
     for (let i = 0; i < 3; i++) {
-      const px = x + 5 + i * (c - 12) / 2;
-      const h = (c * 0.32) * (0.35 + sobe * 0.65);
+      const px = x + c * 0.26 + i * c * 0.24;
       ctx.beginPath();
-      ctx.moveTo(px, y + c - 5);
-      ctx.lineTo(px + 4, y + c - 5 - h);
-      ctx.lineTo(px + 8, y + c - 5);
+      ctx.moveTo(px - c * 0.13, y + c * 0.78);
+      ctx.lineTo(px, y + c * 0.78 - h);
+      ctx.lineTo(px + c * 0.13, y + c * 0.78);
       ctx.closePath();
-      ctx.fill();
+      pintar(ctx, sobe > 0.55 ? '#ffd0d6' : '#b8909c', CONTORNO, 1.8);
     }
+    if (sobe > 0.55) luz(ctx, x + c / 2, y + c * 0.5, c * 0.7, '#ff6a7a', 0.3 * sobe);
   } else if (nome === 'fogo') {
     const t = (Math.sin(tempo * 5 + fase) + 1) / 2;
-    const g = ctx.createRadialGradient(x + c / 2, y + c / 2, 1, x + c / 2, y + c / 2, c * 0.7);
-    g.addColorStop(0, 'rgba(255,190,90,' + (0.5 + t * 0.4) + ')');
-    g.addColorStop(0.5, 'rgba(220,80,20,' + (0.3 + t * 0.25) + ')');
-    g.addColorStop(1, 'rgba(80,10,0,0)');
-    ctx.fillStyle = g;
-    ctx.fillRect(x - c * 0.2, y - c * 0.2, c * 1.4, c * 1.4);
+    luz(ctx, x + c / 2, y + c / 2, c * 1.1, '#ff9a3a', 0.5 + t * 0.3);
+    ctx.fillStyle = 'rgba(50,16,6,0.55)';
+    ctx.fillRect(x + 2, y + 2, c - 4, c - 4);
+    for (let i = 0; i < 2; i++) {
+      const px = x + c * (0.34 + i * 0.32);
+      const alt = c * (0.4 + 0.22 * Math.sin(tempo * 7 + fase + i * 2));
+      ctx.beginPath();
+      ctx.moveTo(px - c * 0.13, y + c * 0.78);
+      ctx.quadraticCurveTo(px - c * 0.08, y + c * 0.78 - alt * 0.6, px, y + c * 0.78 - alt);
+      ctx.quadraticCurveTo(px + c * 0.08, y + c * 0.78 - alt * 0.6, px + c * 0.13, y + c * 0.78);
+      ctx.closePath();
+      ctx.fillStyle = i ? '#ffd05a' : '#ff8a2a';
+      ctx.fill();
+    }
   } else if (nome === 'lodo') {
-    ctx.fillStyle = 'rgba(30,70,60,0.6)';
+    ctx.fillStyle = 'rgba(26,72,60,0.85)';
     ctx.fillRect(x, y, c, c);
-    ctx.strokeStyle = 'rgba(120,220,180,' + (0.12 + 0.1 * Math.sin(tempo * 1.6 + fase)) + ')';
-    ctx.lineWidth = 1.5;
+    ctx.strokeStyle = 'rgba(110,220,180,0.3)';
+    ctx.lineWidth = 1.6;
     ctx.beginPath();
-    ctx.ellipse(x + c / 2, y + c / 2, c * 0.3, c * 0.18, fase, 0, Math.PI * 2);
+    ctx.ellipse(x + c / 2, y + c / 2, c * 0.3, c * 0.16,
+      fase + Math.sin(tempo + fase) * 0.3, 0, Math.PI * 2);
     ctx.stroke();
+    ctx.fillStyle = 'rgba(150,255,210,0.18)';
+    ctx.beginPath();
+    ctx.arc(x + c * 0.3, y + c * 0.62, c * 0.07 * (1 + Math.sin(tempo * 3 + fase) * 0.3), 0, Math.PI * 2);
+    ctx.fill();
   } else if (nome === 'teia') {
-    ctx.strokeStyle = 'rgba(200,195,180,0.35)';
-    ctx.lineWidth = 1;
+    ctx.strokeStyle = 'rgba(226,222,208,0.42)';
+    ctx.lineWidth = 1.2;
     ctx.beginPath();
     for (let i = 0; i < 4; i++) {
       const a = (i / 4) * Math.PI * 2 + fase * 0.2;
@@ -480,25 +511,21 @@ export function desenharPerigo(ctx, nome, x, y, c, tempo, fase) {
     ctx.beginPath();
     ctx.arc(x + c / 2, y + c / 2, c * 0.26, 0, Math.PI * 2);
     ctx.stroke();
+    ctx.beginPath();
+    ctx.arc(x + c / 2, y + c / 2, c * 0.42, 0, Math.PI * 2);
+    ctx.stroke();
   } else if (nome === 'vazio') {
-    // Buraco, nao bloco: preto com boca luminosa e cacos caindo para dentro.
     const t = (Math.sin(tempo * 1.4 + fase) + 1) / 2;
-    const cxm = x + c / 2, cym = y + c / 2;
-    const g = ctx.createRadialGradient(cxm, cym, c * 0.1, cxm, cym, c * 0.62);
-    g.addColorStop(0, '#000');
-    g.addColorStop(0.72, '#000');
-    g.addColorStop(0.86, 'rgba(80,60,170,' + (0.35 + t * 0.3) + ')');
-    g.addColorStop(1, 'rgba(20,10,50,0)');
-    ctx.fillStyle = g;
-    ctx.fillRect(x - 2, y - 2, c + 4, c + 4);
-    ctx.globalCompositeOperation = 'lighter';
-    for (let i = 0; i < 3; i++) {
-      const a = (tempo * 0.7 + i / 3 + fase) % 1;
-      const r = c * 0.42 * (1 - a);
-      const ang = fase + i * 2.1 + tempo * 0.5;
-      ctx.fillStyle = 'rgba(150,130,255,' + (0.5 * a) + ')';
-      ctx.fillRect(cxm + Math.cos(ang) * r, cym + Math.sin(ang) * r, 2, 2);
-    }
+    ctx.fillStyle = '#000';
+    ctx.beginPath();
+    ctx.ellipse(x + c / 2, y + c / 2, c * 0.5, c * 0.46, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = 'rgba(120,100,255,' + (0.32 + t * 0.3) + ')';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+    ctx.fillStyle = 'rgba(160,140,255,' + (0.5 * t) + ')';
+    const a = tempo * 1.6 + fase;
+    ctx.fillRect(x + c / 2 + Math.cos(a) * c * 0.3 - 1, y + c / 2 + Math.sin(a) * c * 0.26 - 1, 2, 2);
   }
   ctx.restore();
 }

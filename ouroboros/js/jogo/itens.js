@@ -5,6 +5,7 @@
 // morte — e a unica coisa aqui que sai da corrida.
 
 import { TAU, dist } from '../nucleo/util.js';
+import { luz, sombraChao, anelPremio, pintar, clarear, CONTORNO } from '../arte/pincel.js';
 
 export class Item {
   constructor(op) {
@@ -39,46 +40,77 @@ export class Item {
     if (meuCx === cabCx && meuCy === cabCy) jogo.recolher(this);
   }
 
+  // Item nunca pode ser confundido com bicho. Tres coisas garantem isso:
+  //   - ele FLUTUA: sobe e desce acima de uma sombrinha parada no chao;
+  //   - o anel do chao FECHA para dentro (o de bicho abre para fora);
+  //   - a cor e sempre fria ou rosa, nunca laranja/vermelho de ameaca.
   desenhar(ctx, arena, tempo) {
-    const sobe = Math.sin(tempo * 2.4 + this.fase) * 2.4;
+    const c = arena.celula;
+    const sobe = Math.sin(tempo * 2.6 + this.fase) * c * 0.13 - c * 0.16;
     const x = this.x || arena.px(this.cx);
-    const y = (this.y || arena.py(this.cy)) + sobe;
-    const pulso = 0.75 + 0.25 * Math.sin(tempo * 4 + this.fase);
+    const chao = (this.y || arena.py(this.cy));
+    const y = chao + sobe;
+    const pulso = 0.8 + 0.2 * Math.sin(tempo * 4.5 + this.fase);
 
-    let cor = '#8affb0', corGlow = 'rgba(90,255,170,ALFA)', raio = 5.2;
-    if (this.tipo === 'coracao') { cor = '#ff6a8a'; corGlow = 'rgba(255,90,120,ALFA)'; raio = 6.5; }
-    else if (this.tipo === 'essencia') { cor = '#ffd07a'; corGlow = 'rgba(255,200,110,ALFA)'; raio = 5.5; }
-    else if (this.tipo === 'banquete') { cor = '#c9ff7a'; corGlow = 'rgba(190,255,120,ALFA)'; raio = 8.5; }
-
-    ctx.save();
-    ctx.globalCompositeOperation = 'lighter';
-    const g = ctx.createRadialGradient(x, y, 0, x, y, raio * 3.4 * pulso);
-    g.addColorStop(0, corGlow.replace('ALFA', '0.55'));
-    g.addColorStop(1, corGlow.replace('ALFA', '0'));
-    ctx.fillStyle = g;
-    ctx.fillRect(x - raio * 3.4, y - raio * 3.4, raio * 6.8, raio * 6.8);
-    ctx.restore();
+    let cor = '#5ce08a', aceso = '#c8ffd8', raio = c * 0.24;
+    if (this.tipo === 'coracao') { cor = '#ff5a80'; aceso = '#ffc0d0'; raio = c * 0.27; }
+    else if (this.tipo === 'essencia') { cor = '#ffc24a'; aceso = '#fff0c0'; raio = c * 0.25; }
+    else if (this.tipo === 'banquete') { cor = '#9cff5a'; aceso = '#e0ffc0'; raio = c * 0.36; }
 
     ctx.save();
+    sombraChao(ctx, x, chao + c * 0.3, raio * 1.1, raio * 0.42, 0.6);
+    anelPremio(ctx, x, chao + c * 0.3, raio * 1.5, cor, tempo, this.fase);
+    luz(ctx, x, y, raio * 3.1 * pulso, cor, 0.34);
+
     ctx.translate(x, y);
+    const traco = Math.max(1.8, c * 0.075);
+
     if (this.tipo === 'coracao') {
-      ctx.fillStyle = cor;
-      ctx.scale(raio / 8, raio / 8);
+      const bate = 1 + 0.09 * Math.sin(tempo * 7 + this.fase);
+      ctx.scale(bate, bate);
       ctx.beginPath();
-      ctx.moveTo(0, 6);
-      ctx.bezierCurveTo(-9, 0, -5, -7, 0, -2.6);
-      ctx.bezierCurveTo(5, -7, 9, 0, 0, 6);
-      ctx.fill();
+      ctx.moveTo(0, raio * 0.95);
+      ctx.bezierCurveTo(-raio * 1.7, -raio * 0.1, -raio * 0.9, -raio * 1.25, 0, -raio * 0.45);
+      ctx.bezierCurveTo(raio * 0.9, -raio * 1.25, raio * 1.7, -raio * 0.1, 0, raio * 0.95);
+      ctx.closePath();
+      pintar(ctx, cor, CONTORNO, traco);
+      ctx.beginPath();
+      ctx.ellipse(-raio * 0.42, -raio * 0.42, raio * 0.22, raio * 0.16, -0.6, 0, TAU);
+      ctx.fillStyle = aceso; ctx.fill();
+    } else if (this.tipo === 'essencia') {
+      // gema de seis lados: forma dura, so dela, para ler "moeda"
+      ctx.beginPath();
+      for (let i = 0; i < 6; i++) {
+        const a = (i / 6) * TAU - Math.PI / 2;
+        const px = Math.cos(a) * raio, py = Math.sin(a) * raio * 1.15;
+        i ? ctx.lineTo(px, py) : ctx.moveTo(px, py);
+      }
+      ctx.closePath();
+      pintar(ctx, cor, CONTORNO, traco);
+      ctx.beginPath();
+      ctx.moveTo(0, -raio * 1.15); ctx.lineTo(raio * 0.5, -raio * 0.2); ctx.lineTo(0, raio * 0.2);
+      ctx.closePath();
+      ctx.fillStyle = clarear(cor, 0.45); ctx.fill();
     } else {
-      ctx.fillStyle = cor;
+      // alma: chama fria, ponta para cima, com nucleo aceso
       ctx.beginPath();
-      ctx.ellipse(0, 0, raio * pulso, raio * 1.25 * pulso, Math.sin(tempo + this.fase) * 0.3, 0, TAU);
-      ctx.fill();
-      ctx.fillStyle = 'rgba(255,255,255,0.8)';
+      ctx.moveTo(0, -raio * 1.5);
+      ctx.quadraticCurveTo(raio * 1.05, -raio * 0.25, raio * 0.55, raio * 0.6);
+      ctx.quadraticCurveTo(raio * 0.2, raio * 1.15, 0, raio * 0.95);
+      ctx.quadraticCurveTo(-raio * 0.2, raio * 1.15, -raio * 0.55, raio * 0.6);
+      ctx.quadraticCurveTo(-raio * 1.05, -raio * 0.25, 0, -raio * 1.5);
+      ctx.closePath();
+      pintar(ctx, cor, CONTORNO, traco);
       ctx.beginPath();
-      ctx.arc(-raio * 0.28, -raio * 0.42, raio * 0.28, 0, TAU);
-      ctx.fill();
+      ctx.ellipse(0, raio * 0.28, raio * 0.34 * pulso, raio * 0.55 * pulso, 0, 0, TAU);
+      ctx.fillStyle = aceso; ctx.fill();
     }
+
+    // faisquinha girando: diz "pegue-me" sem escrever nada
+    const a = tempo * 2.2 + this.fase;
+    ctx.fillStyle = aceso;
+    ctx.globalAlpha = 0.5 + 0.5 * Math.sin(tempo * 6 + this.fase);
+    ctx.fillRect(Math.cos(a) * raio * 1.6 - 1, Math.sin(a) * raio * 1.6 - 1, 2.4, 2.4);
     ctx.restore();
   }
 }

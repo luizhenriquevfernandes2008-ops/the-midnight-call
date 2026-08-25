@@ -14,7 +14,7 @@ const PADRAO = () => ({
   altar: {},
   recordes: { corridas: 0, vitorias: 0, maiorAndar: 0, maiorCorpo: 0, maisAlmas: 0, mortes: {} },
   compendio: { inimigos: [], chefes: [], reliquias: [] },
-  opcoes: { mestre: 0.75, musica: 0.62, efeitos: 0.85, mudo: false, tremor: 1, grao: 1 },
+  opcoes: { mestre: 0.75, musica: 0.62, efeitos: 0.85, mudo: false, tremor: 1, grao: 1, qualidade: 1.25 },
   andarLiberado: 0,
   visto: { tutorial: false },
 });

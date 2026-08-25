@@ -10,6 +10,9 @@
 // longe, ou — no caso do Rato-de-Cauda — arranca a ponta.
 
 import { TAU, limita, distGrade, chance, dist } from '../nucleo/util.js';
+import {
+  luz, sombraChao, anelAmeaca, pintar, brilhoDeCima, clarear, escurecer, CONTORNO,
+} from '../arte/pincel.js';
 
 const PASSOS = [[1, 0], [-1, 0], [0, 1], [0, -1]];
 
@@ -279,8 +282,23 @@ export class Inimigo {
 
   andar(jogo, passo, atravessa = false) {
     if (!passo) return;
-    const nx = this.cx + passo.dx, ny = this.cy + passo.dy;
+    let nx = this.cx + passo.dx, ny = this.cy + passo.dy;
     if (!atravessa && !jogo.arena.dentro(nx, ny)) return;
+
+    // O espectro ATRAVESSA parede, mas nao PARA dentro dela. Parar dentro
+    // era um beco sem saida de verdade: o bicho ficava inalcancavel, a sala
+    // nunca limpava e a porta nunca abria — o jogador ficava presa num
+    // andar sem entender por que.
+    if (atravessa && jogo.arena.parede(nx, ny)) {
+      let achou = false;
+      for (let k = 2; k <= 4; k++) {
+        const tx = this.cx + passo.dx * k, ty = this.cy + passo.dy * k;
+        if (!jogo.arena.dentro(tx, ty)) break;
+        if (!jogo.arena.parede(tx, ty)) { nx = tx; ny = ty; achou = true; break; }
+      }
+      if (!achou) return;
+    }
+
     this.cx = nx; this.cy = ny;
     jogo.aoAndarInimigo(this);
   }
@@ -406,75 +424,83 @@ export class Inimigo {
     }
   }
 
+  // ---------- desenho ----------
+  //
+  // Ordem fixa, de tras para frente: sombra no chao, anel de ameaca, brilho,
+  // corpo com contorno, detalhes, telegrafo, barra de vida. Manter a ordem
+  // igual para todo bicho e o que faz a arena parecer desenhada pela mesma
+  // mao.
   desenhar(ctx, arena, tempo) {
     const p = this.posicao(arena);
-    const s = arena.celula * 0.86;
+    const c = arena.celula;
+    const s = c * 1.16;
     const d = this.def;
-    ctx.save();
-    if (d.comportamento === 'espectro') ctx.globalAlpha = this.solido ? 1 : 0.32;
+    const bal = Math.sin(tempo * 3.2 + this.fase) * c * 0.05;   // respiracao
+    const y = p.y + bal;
 
-    // brilho por baixo
     ctx.save();
-    ctx.globalCompositeOperation = 'lighter';
-    const g = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, s * 1.15);
-    g.addColorStop(0, hexA(d.brilho || '#ff6a4a', 0.28));
-    g.addColorStop(1, hexA(d.brilho || '#ff6a4a', 0));
-    ctx.fillStyle = g;
-    ctx.fillRect(p.x - s * 1.2, p.y - s * 1.2, s * 2.4, s * 2.4);
+    if (d.comportamento === 'espectro') ctx.globalAlpha = this.solido ? 1 : 0.34;
+
+    sombraChao(ctx, p.x, p.y + c * 0.36, s * 0.4, s * 0.17, 0.85);
+    if (this.solido !== false) {
+      anelAmeaca(ctx, p.x, p.y + c * 0.36, s * 0.44, '#ff4a5a', tempo, this.fase);
+    }
+    luz(ctx, p.x, y, s * 0.8, d.brilho || '#ff6a4a', this.flash > 0.02 ? 0.6 : 0.24);
+
+    const corpo = this.flash > 0.02 ? '#fff4f0' : d.cor;
+    desenharForma(ctx, d.forma, p.x, y, s, corpo, d.brilho, tempo, this.fase, this);
+
+    this.desenharTelegrafo(ctx, arena, p, s, tempo);
+
+    if (this.veneno) {
+      luz(ctx, p.x, y, s * 0.6, '#9cff7a', 0.35);
+    }
+
+    if (this.vida < this.vidaMax) {
+      const w = s * 0.78, h = 3.5;
+      const bx = p.x - w / 2, by = p.y - c * 0.62;
+      ctx.fillStyle = 'rgba(0,0,0,0.75)';
+      ctx.fillRect(bx - 1, by - 1, w + 2, h + 2);
+      ctx.fillStyle = '#e0424f';
+      ctx.fillRect(bx, by, w * (this.vida / this.vidaMax), h);
+    }
     ctx.restore();
+  }
 
-    const cor = this.flash > 0.02
-      ? 'rgba(255,255,255,' + (0.55 + this.flash * 0.45) + ')'
-      : d.cor;
-    desenharForma(ctx, d.forma, p.x, p.y, s, cor, d.brilho, tempo, this.fase, this);
-
-    // telegrafo do salto e do pavio
+  desenharTelegrafo(ctx, arena, p, s, tempo) {
+    const d = this.def;
     if (this.estado === 'preparo' && this.alvoSalto) {
       const t = limita(this.tempoEstado / (d.preparo || 600), 0, 1);
       const ax = arena.px(this.alvoSalto.cx), ay = arena.py(this.alvoSalto.cy);
       ctx.save();
-      ctx.globalCompositeOperation = 'lighter';
-      ctx.strokeStyle = 'rgba(255,220,150,' + (0.3 + t * 0.6) + ')';
-      ctx.lineWidth = 2;
-      ctx.beginPath();
-      ctx.arc(ax, ay, arena.celula * (0.8 - t * 0.35), 0, TAU);
-      ctx.stroke();
+      ctx.strokeStyle = 'rgba(255,190,90,' + (0.35 + t * 0.55) + ')';
+      ctx.lineWidth = 2.5;
+      ctx.setLineDash([5, 5]);
       ctx.beginPath();
       ctx.moveTo(p.x, p.y);
       ctx.lineTo(ax, ay);
-      ctx.setLineDash([4, 4]);
+      ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.fillStyle = 'rgba(255,170,60,' + (0.12 + t * 0.28) + ')';
+      ctx.beginPath();
+      ctx.arc(ax, ay, arena.celula * (0.85 - t * 0.3), 0, TAU);
+      ctx.fill();
+      ctx.strokeStyle = 'rgba(255,220,140,' + (0.5 + t * 0.5) + ')';
+      ctx.lineWidth = 2;
       ctx.stroke();
       ctx.restore();
     }
     if (this.estado === 'pavio') {
       const t = 1 - limita(this.pavio / (d.pavio || 700), 0, 1);
+      luz(ctx, p.x, p.y, s * (0.9 + t * 1.1), '#ffcf6a', 0.4 + t * 0.5);
       ctx.save();
-      ctx.globalCompositeOperation = 'lighter';
-      ctx.fillStyle = 'rgba(255,180,80,' + (0.25 + t * 0.6) + ')';
+      ctx.strokeStyle = 'rgba(255,120,60,' + (0.4 + t * 0.6) + ')';
+      ctx.lineWidth = 2;
       ctx.beginPath();
-      ctx.arc(p.x, p.y, s * (0.6 + t * 0.7), 0, TAU);
-      ctx.fill();
+      ctx.arc(p.x, p.y, (d.raioExplosao || 2.5) * arena.celula * (0.35 + t * 0.65), 0, TAU);
+      ctx.stroke();
       ctx.restore();
     }
-    if (this.veneno) {
-      ctx.save();
-      ctx.globalCompositeOperation = 'lighter';
-      ctx.fillStyle = 'rgba(140,255,120,0.22)';
-      ctx.beginPath();
-      ctx.arc(p.x, p.y, s * 0.7, 0, TAU);
-      ctx.fill();
-      ctx.restore();
-    }
-
-    // barra de vida so quando ja levou pancada
-    if (this.vida < this.vidaMax) {
-      const w = s * 0.9, h = 3;
-      ctx.fillStyle = 'rgba(0,0,0,0.6)';
-      ctx.fillRect(p.x - w / 2, p.y - s * 0.75, w, h);
-      ctx.fillStyle = '#d04a5a';
-      ctx.fillRect(p.x - w / 2, p.y - s * 0.75, w * (this.vida / this.vidaMax), h);
-    }
-    ctx.restore();
   }
 }
 
@@ -484,244 +510,315 @@ function hexA(hex, a) {
 }
 
 // ---------- silhuetas ----------
+//
+// Cada bicho e feito de duas ou tres formas grandes, corpo chapado, contorno
+// escuro grosso e um detalhe aceso (quase sempre o olho). Nada de gradiente:
+// forma recortada se le no meio de doze bichos, sombra macia nao.
+
+function caminho(ctx, f) { ctx.beginPath(); f(); }
 
 export function desenharForma(ctx, forma, x, y, s, cor, brilho, tempo, fase = 0, bicho = null) {
   ctx.save();
   ctx.translate(x, y);
-  ctx.fillStyle = cor;
-  ctx.strokeStyle = cor;
-  ctx.lineWidth = Math.max(1.5, s * 0.09);
   ctx.lineJoin = 'round';
   ctx.lineCap = 'round';
   const t = tempo * 4 + fase;
-  const r = s * 0.42;
+  const r = s * 0.46;
+  const traco = Math.max(2, s * 0.09);
+  const claro = clarear(cor, 0.3);
+  const escuro = escurecer(cor, 0.42);
+  const aceso = brilho || '#ffd08a';
+
+  const olho = (ox, oy, raio, aberto = 1) => {
+    caminho(ctx, () => ctx.ellipse(ox, oy, raio, raio * aberto, 0, 0, TAU));
+    pintar(ctx, aceso, CONTORNO, traco * 0.7);
+    ctx.fillStyle = 'rgba(10,4,10,0.9)';
+    ctx.beginPath();
+    ctx.ellipse(ox + raio * 0.16, oy, raio * 0.38, raio * 0.72 * aberto, 0, 0, TAU);
+    ctx.fill();
+  };
 
   switch (forma) {
     case 'verme': {
-      const ondas = 3;
-      ctx.beginPath();
-      for (let i = 0; i <= ondas * 4; i++) {
-        const p = i / (ondas * 4);
-        const px = -r + p * r * 2;
-        const py = Math.sin(p * TAU * 1.4 + t) * r * 0.34;
-        i ? ctx.lineTo(px, py) : ctx.moveTo(px, py);
+      // corpo em tres bolas, a da frente maior: le como "cabeca + corpo"
+      const onda = Math.sin(t) * r * 0.16;
+      for (let i = 2; i >= 0; i--) {
+        const px = -r * 0.55 + i * r * 0.55;
+        const raio = r * (0.42 + i * 0.12);
+        caminho(ctx, () => ctx.ellipse(px, onda * (i - 1), raio, raio * 0.92, 0, 0, TAU));
+        pintar(ctx, i === 2 ? claro : cor, CONTORNO, traco);
       }
-      ctx.lineWidth = s * 0.3;
-      ctx.stroke();
-      ctx.fillStyle = brilho;
-      ctx.beginPath(); ctx.arc(r * 0.85, Math.sin(TAU * 1.4 + t) * r * 0.34, s * 0.11, 0, TAU); ctx.fill();
+      olho(r * 0.42, -r * 0.1, r * 0.16);
       break;
     }
     case 'garra': {
-      ctx.beginPath();
-      ctx.moveTo(0, r * 0.9);
-      ctx.lineTo(-r * 0.85, -r * 0.2);
-      ctx.lineTo(-r * 0.3, -r * 0.85);
-      ctx.lineTo(r * 0.3, -r * 0.85);
-      ctx.lineTo(r * 0.85, -r * 0.2);
-      ctx.closePath();
-      ctx.fill();
-      ctx.fillStyle = brilho;
-      for (const lx of [-0.32, 0.32]) {
-        ctx.beginPath();
-        ctx.ellipse(lx * r * 1.4, -r * 0.3, s * 0.08, s * 0.11, 0, 0, TAU);
-        ctx.fill();
-      }
+      caminho(ctx, () => {
+        ctx.moveTo(0, r * 0.95);
+        ctx.lineTo(-r * 0.92, r * 0.1);
+        ctx.lineTo(-r * 0.55, -r * 0.55);
+        ctx.lineTo(-r * 0.2, -r * 0.1);
+        ctx.lineTo(0, -r * 0.85);
+        ctx.lineTo(r * 0.2, -r * 0.1);
+        ctx.lineTo(r * 0.55, -r * 0.55);
+        ctx.lineTo(r * 0.92, r * 0.1);
+        ctx.closePath();
+      });
+      pintar(ctx, cor, CONTORNO, traco);
+      brilhoDeCima(ctx, (c2) => {
+        c2.moveTo(0, r * 0.9); c2.lineTo(-r * 0.9, 0); c2.lineTo(0, -r * 0.9); c2.lineTo(r * 0.9, 0);
+        c2.closePath();
+      }, 0.6, -r * 0.25, 0.22);
+      olho(-r * 0.3, -r * 0.05, r * 0.15);
+      olho(r * 0.3, -r * 0.05, r * 0.15);
       break;
     }
     case 'boca': {
-      const abre = (Math.sin(t) + 1) / 2;
-      ctx.beginPath(); ctx.arc(0, 0, r, 0, TAU); ctx.fill();
-      ctx.fillStyle = '#100608';
-      ctx.beginPath();
-      ctx.ellipse(0, 0, r * 0.62, r * (0.16 + abre * 0.5), 0, 0, TAU);
-      ctx.fill();
-      ctx.fillStyle = brilho;
-      for (let i = -2; i <= 2; i++) {
+      caminho(ctx, () => ctx.arc(0, 0, r * 0.92, 0, TAU));
+      pintar(ctx, cor, CONTORNO, traco);
+      const abre = 0.25 + 0.35 * (Math.sin(t) + 1) / 2;
+      caminho(ctx, () => ctx.ellipse(0, r * 0.06, r * 0.62, r * abre, 0, 0, TAU));
+      pintar(ctx, '#180a12', CONTORNO, traco * 0.6);
+      ctx.fillStyle = aceso;
+      for (let i = -1; i <= 1; i++) {
         ctx.beginPath();
-        ctx.moveTo(i * r * 0.25, -r * (0.1 + abre * 0.4));
-        ctx.lineTo(i * r * 0.25 + r * 0.08, -r * 0.02);
-        ctx.lineTo(i * r * 0.25 - r * 0.08, -r * 0.02);
+        ctx.moveTo(i * r * 0.34, r * 0.06 - r * abre);
+        ctx.lineTo(i * r * 0.34 + r * 0.11, r * 0.06 - r * abre * 0.2);
+        ctx.lineTo(i * r * 0.34 - r * 0.11, r * 0.06 - r * abre * 0.2);
         ctx.closePath(); ctx.fill();
       }
+      olho(-r * 0.4, -r * 0.55, r * 0.13);
+      olho(r * 0.4, -r * 0.55, r * 0.13);
       break;
     }
     case 'cranio': {
-      ctx.beginPath();
-      ctx.ellipse(0, -r * 0.15, r * 0.8, r * 0.75, 0, 0, TAU);
-      ctx.fill();
-      ctx.beginPath();
-      ctx.moveTo(-r * 0.42, r * 0.42); ctx.lineTo(r * 0.42, r * 0.42);
-      ctx.lineTo(r * 0.3, r * 0.86); ctx.lineTo(-r * 0.3, r * 0.86);
-      ctx.closePath(); ctx.fill();
-      ctx.fillStyle = '#12060a';
-      for (const lx of [-0.34, 0.34]) {
+      caminho(ctx, () => {
+        ctx.moveTo(-r * 0.8, r * 0.1);
+        ctx.quadraticCurveTo(-r * 0.86, -r * 0.9, 0, -r * 0.9);
+        ctx.quadraticCurveTo(r * 0.86, -r * 0.9, r * 0.8, r * 0.1);
+        ctx.lineTo(r * 0.45, r * 0.32);
+        ctx.lineTo(r * 0.4, r * 0.8);
+        ctx.lineTo(-r * 0.4, r * 0.8);
+        ctx.lineTo(-r * 0.45, r * 0.32);
+        ctx.closePath();
+      });
+      pintar(ctx, cor, CONTORNO, traco);
+      ctx.fillStyle = '#140a12';
+      for (const lx of [-0.36, 0.36]) {
         ctx.beginPath();
-        ctx.ellipse(lx * r, -r * 0.2, r * 0.2, r * 0.26, 0, 0, TAU);
+        ctx.ellipse(lx * r, -r * 0.28, r * 0.22, r * 0.26, 0, 0, TAU);
         ctx.fill();
       }
+      ctx.fillStyle = aceso;
+      for (const lx of [-0.36, 0.36]) {
+        ctx.beginPath();
+        ctx.arc(lx * r + r * 0.05, -r * 0.24, r * 0.09, 0, TAU);
+        ctx.fill();
+      }
+      ctx.strokeStyle = CONTORNO;
+      ctx.lineWidth = traco * 0.6;
+      ctx.beginPath();
+      for (let i = -1; i <= 1; i++) { ctx.moveTo(i * r * 0.26, r * 0.34); ctx.lineTo(i * r * 0.26, r * 0.78); }
+      ctx.stroke();
       break;
     }
     case 'rato': {
+      caminho(ctx, () => {
+        ctx.moveTo(r * 0.75, r * 0.1);
+        ctx.quadraticCurveTo(r * 1.25, r * 0.35 + Math.sin(t) * r * 0.3, r * 1.4, -r * 0.25);
+      });
+      ctx.strokeStyle = escuro; ctx.lineWidth = traco * 1.1; ctx.stroke();
+      caminho(ctx, () => ctx.arc(-r * 0.5, -r * 0.5, r * 0.3, 0, TAU));
+      pintar(ctx, escuro, CONTORNO, traco * 0.8);
+      caminho(ctx, () => ctx.arc(r * 0.05, -r * 0.62, r * 0.26, 0, TAU));
+      pintar(ctx, escuro, CONTORNO, traco * 0.8);
+      caminho(ctx, () => ctx.ellipse(0, 0, r * 0.88, r * 0.6, Math.sin(t) * 0.1, 0, TAU));
+      pintar(ctx, cor, CONTORNO, traco);
+      olho(-r * 0.48, -r * 0.06, r * 0.14);
+      ctx.fillStyle = '#fff0f6';
       ctx.beginPath();
-      ctx.ellipse(0, 0, r * 0.85, r * 0.6, Math.sin(t) * 0.12, 0, TAU);
-      ctx.fill();
-      ctx.beginPath();
-      ctx.arc(-r * 0.55, -r * 0.45, r * 0.28, 0, TAU);
-      ctx.arc(r * 0.1, -r * 0.62, r * 0.24, 0, TAU);
-      ctx.fill();
-      ctx.strokeStyle = cor;
-      ctx.lineWidth = s * 0.07;
-      ctx.beginPath();
-      ctx.moveTo(r * 0.8, r * 0.1);
-      ctx.quadraticCurveTo(r * 1.3, r * 0.3 + Math.sin(t) * r * 0.3, r * 1.5, -r * 0.2);
-      ctx.stroke();
-      ctx.fillStyle = brilho;
-      ctx.beginPath(); ctx.arc(-r * 0.5, -r * 0.05, s * 0.07, 0, TAU); ctx.fill();
+      ctx.moveTo(-r * 0.85, r * 0.06); ctx.lineTo(-r * 0.6, r * 0.02); ctx.lineTo(-r * 0.66, r * 0.28);
+      ctx.closePath(); ctx.fill();
       break;
     }
     case 'sudario': {
-      const flutua = Math.sin(t * 0.6) * r * 0.12;
-      ctx.beginPath();
-      ctx.moveTo(-r * 0.8, r * 0.7 + flutua);
-      ctx.quadraticCurveTo(-r * 0.9, -r, 0, -r);
-      ctx.quadraticCurveTo(r * 0.9, -r, r * 0.8, r * 0.7 + flutua);
-      for (let i = 3; i >= 0; i--) {
-        const px = -r * 0.8 + (i / 3) * r * 1.6;
-        ctx.quadraticCurveTo(px + r * 0.2, r * (0.4 + Math.sin(t + i) * 0.25), px, r * 0.7 + flutua);
-      }
-      ctx.closePath(); ctx.fill();
-      ctx.fillStyle = brilho;
-      for (const lx of [-0.3, 0.3]) {
-        ctx.beginPath();
-        ctx.ellipse(lx * r, -r * 0.3, r * 0.12, r * 0.2, 0, 0, TAU);
-        ctx.fill();
-      }
+      const fl = Math.sin(t * 0.6) * r * 0.1;
+      caminho(ctx, () => {
+        ctx.moveTo(-r * 0.82, r * 0.6 + fl);
+        ctx.quadraticCurveTo(-r * 0.95, -r * 0.95, 0, -r * 0.95);
+        ctx.quadraticCurveTo(r * 0.95, -r * 0.95, r * 0.82, r * 0.6 + fl);
+        for (let i = 3; i >= 0; i--) {
+          const px = -r * 0.82 + (i / 3) * r * 1.64;
+          ctx.quadraticCurveTo(px + r * 0.2, r * (0.32 + Math.sin(t + i * 1.4) * 0.22) + fl, px, r * 0.6 + fl);
+        }
+        ctx.closePath();
+      });
+      pintar(ctx, cor, CONTORNO, traco);
+      olho(-r * 0.28, -r * 0.28, r * 0.17);
+      olho(r * 0.28, -r * 0.28, r * 0.17);
       break;
     }
     case 'bolha': {
-      const incha = bicho && bicho.estado === 'pavio' ? 1.25 : 1;
+      const incha = bicho && bicho.estado === 'pavio' ? 1.22 + Math.sin(t * 6) * 0.08 : 1;
+      caminho(ctx, () => ctx.ellipse(0, 0, r * 0.92 * incha, r * 0.86 * incha, 0, 0, TAU));
+      pintar(ctx, cor, CONTORNO, traco);
+      ctx.globalAlpha = 0.4;
+      caminho(ctx, () => ctx.ellipse(-r * 0.28, -r * 0.3, r * 0.26, r * 0.2, -0.5, 0, TAU));
+      pintar(ctx, '#ffffff', null, 0);
+      ctx.globalAlpha = 1;
+      // pavio
+      ctx.strokeStyle = escuro; ctx.lineWidth = traco * 0.8;
       ctx.beginPath();
-      ctx.ellipse(0, 0, r * 0.9 * incha, r * 0.82 * incha * (1 + Math.sin(t) * 0.06), 0, 0, TAU);
-      ctx.fill();
-      ctx.fillStyle = hexA(brilho, 0.6);
-      ctx.beginPath(); ctx.arc(-r * 0.28, -r * 0.3, r * 0.24, 0, TAU); ctx.fill();
+      ctx.moveTo(0, -r * 0.86 * incha);
+      ctx.quadraticCurveTo(r * 0.2, -r * 1.2, r * 0.05, -r * 1.35);
+      ctx.stroke();
+      ctx.fillStyle = aceso;
+      ctx.beginPath(); ctx.arc(r * 0.05, -r * 1.38, r * 0.12, 0, TAU); ctx.fill();
       break;
     }
     case 'ninho': {
-      ctx.beginPath();
-      for (let i = 0; i < 9; i++) {
-        const a = (i / 9) * TAU;
-        const rr = r * (0.75 + Math.sin(a * 3 + t * 0.4) * 0.16);
-        const px = Math.cos(a) * rr, py = Math.sin(a) * rr;
-        i ? ctx.lineTo(px, py) : ctx.moveTo(px, py);
+      caminho(ctx, () => {
+        for (let i = 0; i < 10; i++) {
+          const a = (i / 10) * TAU;
+          const rr = r * (0.82 + Math.sin(a * 3 + t * 0.3) * 0.14);
+          const px = Math.cos(a) * rr, py = Math.sin(a) * rr * 0.9;
+          i ? ctx.lineTo(px, py) : ctx.moveTo(px, py);
+        }
+        ctx.closePath();
+      });
+      pintar(ctx, cor, CONTORNO, traco);
+      const pulso = 0.5 + 0.5 * Math.sin(t);
+      caminho(ctx, () => ctx.arc(0, 0, r * (0.34 + pulso * 0.08), 0, TAU));
+      pintar(ctx, aceso, CONTORNO, traco * 0.7);
+      for (let i = 0; i < 3; i++) {
+        const a = t * 0.4 + (i / 3) * TAU;
+        caminho(ctx, () => ctx.ellipse(Math.cos(a) * r * 0.52, Math.sin(a) * r * 0.44, r * 0.16, r * 0.2, a, 0, TAU));
+        pintar(ctx, claro, CONTORNO, traco * 0.6);
       }
-      ctx.closePath(); ctx.fill();
-      ctx.fillStyle = hexA(brilho, 0.5 + 0.4 * Math.sin(t));
-      ctx.beginPath(); ctx.arc(0, 0, r * 0.36, 0, TAU); ctx.fill();
       break;
     }
     case 'aranha': {
-      ctx.strokeStyle = cor;
-      ctx.lineWidth = s * 0.07;
-      for (let i = 0; i < 4; i++) {
-        const a = 0.5 + i * 0.55;
+      ctx.strokeStyle = escuro;
+      ctx.lineWidth = traco;
+      for (let i = 0; i < 3; i++) {
+        const a = 0.55 + i * 0.55;
         for (const lado of [-1, 1]) {
           ctx.beginPath();
           ctx.moveTo(0, 0);
-          const meio = Math.sin(t + i) * 0.2;
+          const meio = Math.sin(t + i) * 0.22;
           ctx.quadraticCurveTo(
-            lado * Math.cos(a) * r * 0.9, Math.sin(a) * r * 0.5 - r * 0.5 + meio * r,
-            lado * Math.cos(a) * r * 1.35, Math.sin(a) * r * 1.1);
+            lado * Math.cos(a) * r * 1.0, Math.sin(a) * r * 0.5 - r * 0.55 + meio * r,
+            lado * Math.cos(a) * r * 1.4, Math.sin(a) * r * 1.15);
           ctx.stroke();
         }
       }
-      ctx.beginPath(); ctx.ellipse(0, 0, r * 0.5, r * 0.42, 0, 0, TAU); ctx.fill();
-      ctx.fillStyle = brilho;
-      ctx.beginPath(); ctx.arc(0, -r * 0.12, r * 0.14, 0, TAU); ctx.fill();
+      caminho(ctx, () => ctx.ellipse(0, r * 0.12, r * 0.6, r * 0.5, 0, 0, TAU));
+      pintar(ctx, cor, CONTORNO, traco);
+      caminho(ctx, () => ctx.ellipse(0, -r * 0.42, r * 0.36, r * 0.3, 0, 0, TAU));
+      pintar(ctx, claro, CONTORNO, traco * 0.8);
+      olho(-r * 0.14, -r * 0.46, r * 0.1);
+      olho(r * 0.14, -r * 0.46, r * 0.1);
       break;
     }
     case 'chama': {
-      ctx.beginPath();
-      ctx.moveTo(0, r);
-      ctx.quadraticCurveTo(-r * 0.9, r * 0.1, -r * 0.25, -r * 0.4);
-      ctx.quadraticCurveTo(-r * 0.15, -r * (0.7 + Math.sin(t * 2) * 0.2), 0, -r * 1.05);
-      ctx.quadraticCurveTo(r * 0.2, -r * (0.6 + Math.cos(t * 2) * 0.2), r * 0.3, -r * 0.35);
-      ctx.quadraticCurveTo(r * 0.95, r * 0.1, 0, r);
-      ctx.closePath(); ctx.fill();
-      ctx.fillStyle = hexA(brilho, 0.85);
-      ctx.beginPath();
-      ctx.ellipse(0, r * 0.15, r * 0.28, r * 0.44, 0, 0, TAU);
-      ctx.fill();
+      const lamber = Math.sin(t * 2) * r * 0.14;
+      caminho(ctx, () => {
+        ctx.moveTo(0, r * 0.9);
+        ctx.quadraticCurveTo(-r * 0.95, r * 0.15, -r * 0.3, -r * 0.4);
+        ctx.quadraticCurveTo(-r * 0.16, -r * 0.85 + lamber, 0, -r * 1.05);
+        ctx.quadraticCurveTo(r * 0.2, -r * 0.7 - lamber, r * 0.34, -r * 0.36);
+        ctx.quadraticCurveTo(r * 0.98, r * 0.15, 0, r * 0.9);
+        ctx.closePath();
+      });
+      pintar(ctx, cor, CONTORNO, traco);
+      caminho(ctx, () => ctx.ellipse(0, r * 0.2, r * 0.3, r * 0.46, 0, 0, TAU));
+      pintar(ctx, aceso, null, 0);
+      olho(-r * 0.18, -r * 0.1, r * 0.1);
+      olho(r * 0.2, -r * 0.14, r * 0.1);
       break;
     }
     case 'afogado': {
+      caminho(ctx, () => {
+        ctx.moveTo(-r * 0.72, r * 0.9);
+        ctx.quadraticCurveTo(-r * 0.85, -r * 0.1, -r * 0.34, -r * 0.34);
+        ctx.lineTo(r * 0.34, -r * 0.34);
+        ctx.quadraticCurveTo(r * 0.85, -r * 0.1, r * 0.72, r * 0.9);
+        ctx.closePath();
+      });
+      pintar(ctx, cor, CONTORNO, traco);
+      caminho(ctx, () => ctx.ellipse(0, -r * 0.6, r * 0.42, r * 0.4, 0, 0, TAU));
+      pintar(ctx, claro, CONTORNO, traco);
+      olho(-r * 0.16, -r * 0.62, r * 0.12);
+      olho(r * 0.16, -r * 0.62, r * 0.12);
+      ctx.strokeStyle = hexA(aceso, 0.5);
+      ctx.lineWidth = traco * 0.7;
       ctx.beginPath();
-      ctx.ellipse(0, r * 0.25, r * 0.72, r * 0.72, 0, 0, TAU);
-      ctx.fill();
-      ctx.beginPath();
-      ctx.ellipse(0, -r * 0.55, r * 0.42, r * 0.4, 0, 0, TAU);
-      ctx.fill();
-      ctx.strokeStyle = hexA(brilho, 0.6);
-      ctx.lineWidth = s * 0.06;
-      for (let i = 0; i < 3; i++) {
-        ctx.beginPath();
-        ctx.moveTo(-r * 0.6, r * (0.1 + i * 0.3) + Math.sin(t + i) * 2);
-        ctx.lineTo(r * 0.6, r * (0.1 + i * 0.3) + Math.cos(t + i) * 2);
-        ctx.stroke();
+      for (let i = 0; i < 2; i++) {
+        ctx.moveTo(-r * 0.6, r * (0.2 + i * 0.34) + Math.sin(t + i) * 2);
+        ctx.lineTo(r * 0.6, r * (0.2 + i * 0.34) + Math.cos(t + i) * 2);
       }
-      ctx.fillStyle = brilho;
-      for (const lx of [-0.18, 0.18]) {
-        ctx.beginPath(); ctx.arc(lx * r, -r * 0.6, r * 0.08, 0, TAU); ctx.fill();
-      }
+      ctx.stroke();
       break;
     }
     case 'vespa': {
-      const asa = Math.sin(tempo * 40 + fase) * 0.5 + 0.5;
-      ctx.fillStyle = hexA('#ffffff', 0.35);
+      const asa = (Math.sin(tempo * 30 + fase) + 1) / 2;
+      ctx.globalAlpha = 0.45;
       for (const lado of [-1, 1]) {
-        ctx.beginPath();
-        ctx.ellipse(lado * r * 0.5, -r * 0.3, r * 0.55, r * (0.12 + asa * 0.16), lado * 0.5, 0, TAU);
-        ctx.fill();
+        caminho(ctx, () => ctx.ellipse(lado * r * 0.5, -r * 0.42, r * 0.55, r * (0.1 + asa * 0.2), lado * 0.6, 0, TAU));
+        pintar(ctx, '#ffffff', null, 0);
       }
-      ctx.fillStyle = cor;
-      ctx.beginPath(); ctx.ellipse(0, 0, r * 0.55, r * 0.36, 0, 0, TAU); ctx.fill();
+      ctx.globalAlpha = 1;
+      caminho(ctx, () => ctx.ellipse(0, 0, r * 0.62, r * 0.42, 0, 0, TAU));
+      pintar(ctx, cor, CONTORNO, traco);
       ctx.fillStyle = '#1a1206';
-      for (let i = -1; i <= 1; i++) {
-        ctx.fillRect(i * r * 0.26 - r * 0.05, -r * 0.32, r * 0.1, r * 0.64);
-      }
+      for (let i = -1; i <= 1; i++) ctx.fillRect(i * r * 0.28 - r * 0.06, -r * 0.36, r * 0.12, r * 0.72);
+      caminho(ctx, () => ctx.arc(-r * 0.62, -r * 0.06, r * 0.24, 0, TAU));
+      pintar(ctx, claro, CONTORNO, traco * 0.7);
+      ctx.fillStyle = CONTORNO;
+      ctx.beginPath();
+      ctx.moveTo(r * 0.6, 0); ctx.lineTo(r * 0.95, -r * 0.12); ctx.lineTo(r * 0.6, r * 0.16);
+      ctx.closePath(); ctx.fill();
       break;
     }
     case 'olho': {
-      ctx.beginPath(); ctx.arc(0, 0, r * 0.85, 0, TAU); ctx.fill();
-      const piscando = Math.sin(t * 0.7) > 0.86;
+      caminho(ctx, () => ctx.arc(0, 0, r * 0.92, 0, TAU));
+      pintar(ctx, cor, CONTORNO, traco);
+      const piscando = Math.sin(t * 0.6) > 0.9;
       if (!piscando) {
-        ctx.fillStyle = '#f4ecdc';
-        ctx.beginPath(); ctx.arc(0, 0, r * 0.55, 0, TAU); ctx.fill();
-        ctx.fillStyle = brilho;
-        ctx.beginPath(); ctx.arc(Math.cos(t * 0.5) * r * 0.16, Math.sin(t * 0.4) * r * 0.16, r * 0.26, 0, TAU); ctx.fill();
-        ctx.fillStyle = '#08060c';
-        ctx.beginPath(); ctx.arc(Math.cos(t * 0.5) * r * 0.16, Math.sin(t * 0.4) * r * 0.16, r * 0.12, 0, TAU); ctx.fill();
+        caminho(ctx, () => ctx.arc(0, 0, r * 0.6, 0, TAU));
+        pintar(ctx, '#f6efdf', CONTORNO, traco * 0.7);
+        const ox = Math.cos(t * 0.5) * r * 0.18, oy = Math.sin(t * 0.4) * r * 0.18;
+        caminho(ctx, () => ctx.arc(ox, oy, r * 0.3, 0, TAU));
+        pintar(ctx, aceso, null, 0);
+        ctx.fillStyle = '#0a0610';
+        ctx.beginPath(); ctx.arc(ox, oy, r * 0.15, 0, TAU); ctx.fill();
+      } else {
+        ctx.strokeStyle = CONTORNO; ctx.lineWidth = traco;
+        ctx.beginPath(); ctx.moveTo(-r * 0.6, 0); ctx.lineTo(r * 0.6, 0); ctx.stroke();
       }
       break;
     }
     case 'manto': {
-      ctx.beginPath();
-      ctx.moveTo(0, -r);
-      ctx.quadraticCurveTo(r * 0.95, -r * 0.2, r * 0.6, r);
-      ctx.lineTo(-r * 0.6, r);
-      ctx.quadraticCurveTo(-r * 0.95, -r * 0.2, 0, -r);
-      ctx.closePath(); ctx.fill();
-      ctx.fillStyle = '#000';
-      ctx.beginPath(); ctx.ellipse(0, -r * 0.3, r * 0.4, r * 0.44, 0, 0, TAU); ctx.fill();
-      ctx.fillStyle = brilho;
-      for (const lx of [-0.16, 0.16]) {
-        ctx.beginPath(); ctx.ellipse(lx * r, -r * 0.32, r * 0.09, r * 0.14, 0, 0, TAU); ctx.fill();
+      caminho(ctx, () => {
+        ctx.moveTo(0, -r * 1.05);
+        ctx.quadraticCurveTo(r * 0.98, -r * 0.15, r * 0.68, r * 0.95);
+        ctx.lineTo(-r * 0.68, r * 0.95);
+        ctx.quadraticCurveTo(-r * 0.98, -r * 0.15, 0, -r * 1.05);
+        ctx.closePath();
+      });
+      pintar(ctx, cor, CONTORNO, traco);
+      caminho(ctx, () => ctx.ellipse(0, -r * 0.36, r * 0.42, r * 0.46, 0, 0, TAU));
+      pintar(ctx, '#0b0410', CONTORNO, traco * 0.7);
+      ctx.fillStyle = aceso;
+      for (const lx of [-0.17, 0.17]) {
+        ctx.beginPath();
+        ctx.ellipse(lx * r, -r * 0.38, r * 0.09, r * 0.15, 0, 0, TAU);
+        ctx.fill();
       }
       break;
     }
     default:
-      ctx.beginPath(); ctx.arc(0, 0, r * 0.8, 0, TAU); ctx.fill();
+      caminho(ctx, () => ctx.arc(0, 0, r * 0.85, 0, TAU));
+      pintar(ctx, cor, CONTORNO, traco);
   }
   ctx.restore();
 }

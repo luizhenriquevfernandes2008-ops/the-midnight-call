@@ -67,6 +67,11 @@ async function comecar() {
   }
   gfx.aoRedimensionar = () => { if (app.temWebGL) motor.redimensionar(); };
 
+  // Qualidade de imagem: o buffer de desenho e fixo, entao isto define
+  // literalmente quantos pixels o jogo pinta por quadro. Comeca no que foi
+  // salvo e cai sozinho se a maquina nao aguentar.
+  gfx.definirQualidade(salvar.dados.opcoes.qualidade ?? 1.25);
+
   // volumes salvos
   audio.carregarDados(D.musica);
   const o = salvar.dados.opcoes;
@@ -117,11 +122,13 @@ function voltarAoMenu() {
 
 function laco(agora) {
   requestAnimationFrame(laco);
-  let dt = (agora - app.ultimo) / 1000;
+  let dtReal = (agora - app.ultimo) / 1000;
   app.ultimo = agora;
-  if (dt > 0.05) dt = 0.05;          // aba em segundo plano nao teleporta a cobra
+  let dt = dtReal > 0.05 ? 0.05 : dtReal;   // aba em segundo plano nao teleporta a cobra
   app.tempo += dt;
-  app.fps = app.fps * 0.92 + (1 / Math.max(0.001, dt)) * 0.08;
+  app.fps = app.fps * 0.92 + (1 / Math.max(0.001, dtReal)) * 0.08;
+  ajustarQualidade(dtReal);
+  alternar3d();
 
   if (entrada.qualquerTecla || entrada.cliques.length) acordarSom();
   if (entrada.nova('mudo')) {
@@ -152,6 +159,43 @@ function laco(agora) {
   if (app.depurar) desenharDepuracao(frente);
 
   entrada.fimDoQuadro();
+}
+
+// A camada WebGL some quando ninguem esta usando ela. Um canvas de tela
+// cheia a mais para o navegador compor todo quadro custa, mesmo vazio.
+function alternar3d() {
+  if (!app.temWebGL) return;
+  const precisa = app.estado === 'menu' || (app.jogo && app.jogo.estado === 'recompensa');
+  if (precisa === app.mostrando3d) return;
+  app.mostrando3d = precisa;
+  const t = document.getElementById('cena3d');
+  t.style.display = precisa ? '' : 'none';
+  if (precisa) motor.redimensionar();   // sem layout, o canvas volta com 0x0
+}
+
+// Se a maquina nao aguentar, o jogo baixa a resolucao sozinho em vez de
+// ficar aos trancos. Faz isso no maximo duas vezes e avisa uma vez so.
+let acumFps = 0, contaFps = 0;
+function ajustarQualidade(dtReal) {
+  if (app.qualidadeTravada) return;
+  acumFps += 1 / Math.max(0.001, dtReal);
+  contaFps++;
+  if (contaFps < 180) return;
+  const media = acumFps / contaFps;
+  acumFps = 0; contaFps = 0;
+  if (media < 42 && gfx.qualidade > 0.75) {
+    gfx.definirQualidade(gfx.qualidade - 0.25);
+    salvar.dados.opcoes.qualidade = gfx.qualidade;
+    salvar.gravar();
+    if (!app.avisouQualidade) {
+      app.avisouQualidade = true;
+      menu3d.mostrarAviso('Baixei a nitidez para o jogo correr liso. Opcoes > NITIDEZ para mudar.');
+      if (app.jogo) app.jogo.avisar('NITIDEZ REDUZIDA PARA GANHAR VELOCIDADE');
+    }
+  } else if (media > 58) {
+    app.quadrosBons = (app.quadrosBons || 0) + 1;
+    if (app.quadrosBons > 6) app.qualidadeTravada = true;
+  }
 }
 
 function overlayMenu(ctx) {
@@ -235,6 +279,7 @@ function desenharDepuracao(ctx) {
     linhas.push('semente ' + j.corrida.semente);
     linhas.push('particulas ' + j.fx.particulas.length);
   }
+  linhas.push('nitidez ' + gfx.qualidade.toFixed(2) + '  buffer ' + gfx.tela.width + 'x' + gfx.tela.height);
   linhas.forEach((l, i) => texto(ctx, l, 12, 200 + i * 15, {
     tam: 12, cor: 'rgba(140,255,180,0.85)', espaco: 0,
   }));

@@ -8,7 +8,7 @@
     "comprimentoInicial": 5,
     "tickBase": 122,
     "tickMinimo": 58,
-    "danoMordida": 2,
+    "danoMordida": 3,
     "energiaMaxima": 100,
     "energiaRegen": 17,
     "invulneravelAoDano": 640,

@@ -15,6 +15,7 @@
 //     mas fecha as suas proprias saidas.
 
 import { limita, TAU } from '../nucleo/util.js';
+import { luz, sombraChao, pintar, clarear, escurecer, CONTORNO } from '../arte/pincel.js';
 
 const VETOR = {
   cima: { x: 0, y: -1 }, baixo: { x: 0, y: 1 },
@@ -45,6 +46,11 @@ export class Cobra {
     this.piscarOlho = 0;
     this.danoUltimoPerigo = 0;
     this.deslocamentoDano = 0;
+    // animacoes: cada uma e um numero que cai de 1 a 0 e so o desenho le
+    this.mordida = 0;     // mandibula abrindo na mordida
+    this.batida = 0;      // recuo ao bater na parede
+    this.dirBatida = { x: 0, y: 0 };
+    this.rastro = [];     // fantasmas do bote
   }
 
   nascer(cx, cy, comprimento) {
@@ -209,6 +215,12 @@ export class Cobra {
     this.energia = Math.min(this.at.energiaMax,
       this.energia + (this.at.energiaRegen) * dt);
     this.deslocamentoDano *= 1 - Math.min(1, dt * 9);
+    this.mordida = Math.max(0, this.mordida - dt * 5.5);
+    this.batida = Math.max(0, this.batida - dt * 4.2);
+    for (let i = this.rastro.length - 1; i >= 0; i--) {
+      this.rastro[i].t -= dt * 3.4;
+      if (this.rastro[i].t <= 0) this.rastro.splice(i, 1);
+    }
     this.piscarOlho -= dt;
     if (this.piscarOlho < -2.6) this.piscarOlho = 0.16 + Math.random() * 0.1;
 
@@ -253,8 +265,18 @@ export class Cobra {
       } else {
         jogo.audio.parede();
       }
-      this.travadaAte = this.tempo + 90;
-      jogo.fx.emitir(arena.px(nx), arena.py(ny), { n: 5, cor: '#8a7a6a', vel: 80, vida: 0.3, tam: 2 });
+      // NAO trava a cobra. A versao anterior congelava 90ms aqui, e era
+      // exatamente isso que o jogo parecia: engasgado. Agora ela recua na
+      // animacao, solta poeira, e continua respondendo a curva na hora.
+      this.batida = 1;
+      this.dirBatida = { x: this.dir.x, y: this.dir.y };
+      this.acumulado = 0;
+      jogo.fx.sacudir(4);
+      jogo.fx.emitir(arena.px(nx) - this.dir.x * arena.celula * 0.35,
+        arena.py(ny) - this.dir.y * arena.celula * 0.35, {
+        n: 9, cor: '#cbb89a', vel: 130, vida: 0.35, tam: 2.6,
+        angulo: Math.atan2(-this.dir.y, -this.dir.x), espalha: 1.9,
+      });
       return;
     }
 
@@ -291,8 +313,18 @@ export class Cobra {
       jogo.poePocaVeneno(cauda.cx, cauda.cy);
     }
 
+    if (this.bote.celulas > 0 || this.rastro.length) {
+      this.rastro.push({ pts: this.pontos(arena), t: 1 });
+      if (this.rastro.length > 4) this.rastro.shift();
+    }
+
     jogo.aoAndarCobra(nx, ny, emBote);
   }
+
+  // Chamado pelo jogo quando a cabeca acerta alguma coisa: a mandibula
+  // fecha. Animacao curta e sincronizada com o dano, que e o que faz a
+  // mordida "existir" para quem esta olhando.
+  morder() { this.mordida = 1; }
 
   // ---------- desenho ----------
 
@@ -308,103 +340,169 @@ export class Cobra {
     return pts;
   }
 
-  desenhar(ctx, arena, corA = '#3ad07a', corB = '#0e3a2a') {
+  desenhar(ctx, arena, corA = '#4ae08a', corB = '#0e3a2a') {
     const pts = this.pontos(arena);
     if (!pts.length) return;
     const c = arena.celula;
     const devorando = this.devorando();
-    const piscando = this.invulneravel() && Math.floor(this.tempo / 70) % 2 === 0;
-    const dx = this.deslocamentoDano * (Math.random() - 0.5);
-    const dy = this.deslocamentoDano * (Math.random() - 0.5);
+    const machucada = this.invulneravel() && Math.floor(this.tempo / 90) % 2 === 0;
+
+    // recuo da batida: a cobra inteira e empurrada para tras por um instante
+    const rec = this.batida * this.batida;
+    const dx = -this.dirBatida.x * rec * c * 0.28 + this.deslocamentoDano * (Math.random() - 0.5);
+    const dy = -this.dirBatida.y * rec * c * 0.28 + this.deslocamentoDano * (Math.random() - 0.5);
+
+    // Ao levar dano a cobra clareia, mas NAO vira um tubo branco: perder a
+    // silhueta bem na hora do perigo e o pior momento possivel para o
+    // jogador nao achar a propria cabeca.
+    const corpoCor = machucada ? '#c8ffd8' : devorando ? '#ff5f4a' : corA;
+    const corpoEscuro = machucada ? '#3a7a5a' : devorando ? '#6a0d12' : corB;
 
     ctx.save();
     ctx.translate(dx, dy);
-    if (piscando) ctx.globalAlpha = 0.55;
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
 
-    const corpo = (largura, estilo, comp = 'source-over', alfa = 1) => {
-      ctx.globalCompositeOperation = comp;
-      ctx.globalAlpha = alfa * (piscando ? 0.55 : 1);
+    const tracar = (lista, larg, estilo, alfa = 1) => {
+      ctx.globalAlpha = alfa;
       ctx.strokeStyle = estilo;
-      ctx.lineWidth = largura;
-      ctx.lineCap = 'round';
-      ctx.lineJoin = 'round';
+      ctx.lineWidth = larg;
       ctx.beginPath();
-      ctx.moveTo(pts[0].x, pts[0].y);
-      for (let i = 1; i < pts.length; i++) ctx.lineTo(pts[i].x, pts[i].y);
+      ctx.moveTo(lista[0].x, lista[0].y);
+      for (let i = 1; i < lista.length; i++) ctx.lineTo(lista[i].x, lista[i].y);
       ctx.stroke();
     };
 
-    // brilho externo
-    corpo(c * 1.15, devorando ? 'rgba(255,60,60,0.30)' : 'rgba(60,255,150,0.13)', 'lighter');
-    // corpo
-    const g = ctx.createLinearGradient(pts[0].x, pts[0].y,
-      pts[pts.length - 1].x, pts[pts.length - 1].y);
-    g.addColorStop(0, devorando ? '#ff5a4a' : corA);
-    g.addColorStop(1, devorando ? '#5a0a12' : corB);
-    corpo(c * 0.80, g);
-    // faixa clara em cima
-    corpo(c * 0.34, devorando ? 'rgba(255,200,160,0.5)' : 'rgba(180,255,210,0.22)');
+    // fantasmas do bote: o rastro e o que faz o avanco parecer VELOZ em vez
+    // de so teleportar
+    for (const g of this.rastro) {
+      if (g.pts.length < 2) continue;
+      tracar(g.pts, c * 0.62, corA, g.t * 0.22);
+    }
+    ctx.globalAlpha = 1;
 
-    ctx.globalCompositeOperation = 'source-over';
-    ctx.globalAlpha = piscando ? 0.55 : 1;
+    // sombra no chao, deslocada: dá altura ao corpo
+    ctx.globalAlpha = 0.5;
+    ctx.strokeStyle = 'rgba(0,0,0,0.85)';
+    ctx.lineWidth = c * 0.78;
+    ctx.beginPath();
+    ctx.moveTo(pts[0].x, pts[0].y + c * 0.22);
+    for (let i = 1; i < pts.length; i++) ctx.lineTo(pts[i].x, pts[i].y + c * 0.22);
+    ctx.stroke();
+    ctx.globalAlpha = 1;
 
-    // escamas
+    // brilho por baixo (barato: sprite copiado, nao gradiente novo)
+    luz(ctx, pts[0].x, pts[0].y, c * 1.5, devorando ? '#ff4a3a' : '#4affa0', devorando ? 0.5 : 0.24);
+
+    // contorno + corpo + espinha: tres passadas na mesma linha
+    tracar(pts, c * 0.92, CONTORNO);
+    tracar(pts, c * 0.74, corpoCor);
+    tracar(pts, c * 0.5, corpoEscuro, 0.55);
+    tracar(pts, c * 0.26, clarear(corpoCor, 0.35), 0.85);
+
+    // placas dorsais: uma a cada dois segmentos, com contorno
+    ctx.lineWidth = Math.max(1.4, c * 0.06);
     for (let i = 2; i < pts.length; i += 2) {
-      const p = pts[i];
-      const q = pts[i - 1];
+      const p = pts[i], q = pts[i - 1];
       const a = Math.atan2(p.y - q.y, p.x - q.x);
+      const f = 1 - (i / pts.length) * 0.55;
       ctx.save();
       ctx.translate(p.x, p.y);
       ctx.rotate(a);
-      ctx.fillStyle = devorando ? 'rgba(255,140,120,0.30)' : 'rgba(10,40,30,0.34)';
       ctx.beginPath();
-      ctx.ellipse(0, 0, c * 0.16, c * 0.3, 0, 0, TAU);
+      ctx.ellipse(0, 0, c * 0.14 * f, c * 0.3 * f, 0, 0, TAU);
+      ctx.fillStyle = machucada ? 'rgba(255,220,220,0.7)' : escurecer(corpoCor, 0.45);
       ctx.fill();
+      ctx.strokeStyle = 'rgba(6,4,10,0.5)';
+      ctx.stroke();
       ctx.restore();
     }
 
-    // cabeca
-    const h = pts[0];
+    this.desenharCabeca(ctx, pts[0], c, corpoCor, devorando, machucada);
+    ctx.restore();
+  }
+
+  // A cabeca e desenhada a parte porque e ela que atua: abre a boca ao
+  // morder, achata ao bater, e e onde o olho do jogador fica o tempo todo.
+  desenharCabeca(ctx, h, c, corpoCor, devorando, machucada) {
     const ang = Math.atan2(this.dir.y, this.dir.x);
+    const abre = this.mordida * 0.85;              // 0 fechada, 1 escancarada
+    const achata = 1 - this.batida * 0.35;
+    const traco = Math.max(2, c * 0.09);
+    const aceso = devorando ? '#fff0c0' : '#ffe34a';
+
     ctx.save();
     ctx.translate(h.x, h.y);
     ctx.rotate(ang);
-    ctx.fillStyle = devorando ? '#ff7a5a' : corA;
+    ctx.scale(achata, 1 + (1 - achata) * 0.6);
+    ctx.lineJoin = 'round';
+
+    // goela: so aparece quando a boca abre
+    if (abre > 0.02) {
+      ctx.beginPath();
+      ctx.ellipse(c * 0.3, 0, c * 0.36, c * 0.3 * abre + c * 0.05, 0, 0, TAU);
+      pintar(ctx, '#4a0a18', CONTORNO, traco * 0.7);
+    }
+
+    // mandibula de baixo
+    ctx.save();
+    ctx.rotate(abre * 0.55);
     ctx.beginPath();
-    ctx.ellipse(c * 0.06, 0, c * 0.52, c * 0.44, 0, 0, TAU);
-    ctx.fill();
-    // mandibula
-    ctx.fillStyle = 'rgba(0,0,0,0.45)';
+    ctx.moveTo(-c * 0.2, 0);
+    ctx.quadraticCurveTo(c * 0.34, c * 0.1, c * 0.62, c * 0.02);
+    ctx.quadraticCurveTo(c * 0.3, c * 0.42, -c * 0.2, c * 0.3);
+    ctx.closePath();
+    pintar(ctx, escurecer(corpoCor, 0.25), CONTORNO, traco);
+    ctx.restore();
+
+    // cranio (mandibula de cima)
+    ctx.save();
+    ctx.rotate(-abre * 0.35);
     ctx.beginPath();
-    ctx.ellipse(c * 0.42, 0, c * 0.14, c * 0.26, 0, 0, TAU);
-    ctx.fill();
-    // olhos
-    const abertura = this.piscarOlho > 0 ? 0.25 : 1;
+    ctx.moveTo(-c * 0.5, -c * 0.34);
+    ctx.quadraticCurveTo(c * 0.28, -c * 0.5, c * 0.66, -c * 0.06);
+    ctx.quadraticCurveTo(c * 0.3, c * 0.06, -c * 0.5, c * 0.3);
+    ctx.closePath();
+    pintar(ctx, corpoCor, CONTORNO, traco);
+
+    // presas
+    ctx.fillStyle = '#fff6e0';
     for (const lado of [-1, 1]) {
-      ctx.fillStyle = devorando ? '#fff0d0' : '#ffe66a';
       ctx.beginPath();
-      ctx.ellipse(c * 0.16, lado * c * 0.2, c * 0.12, c * 0.12 * abertura, 0, 0, TAU);
-      ctx.fill();
-      ctx.fillStyle = '#100810';
-      ctx.beginPath();
-      ctx.ellipse(c * 0.19, lado * c * 0.2, c * 0.05, c * 0.11 * abertura, 0, 0, TAU);
+      ctx.moveTo(c * 0.44, lado * c * 0.06);
+      ctx.lineTo(c * 0.6, lado * c * 0.02);
+      ctx.lineTo(c * 0.46, lado * c * 0.2);
+      ctx.closePath();
       ctx.fill();
     }
-    // lingua
-    if (Math.sin(this.tempo / 210) > 0.72) {
-      ctx.strokeStyle = '#ff4a6a';
-      ctx.lineWidth = 2;
+
+    // olhos: sempre acesos, sempre no mesmo lugar — e a referencia visual
+    // que o jogador usa para saber para onde a cabeca aponta
+    const abertura = this.piscarOlho > 0 ? 0.25 : 1;
+    for (const lado of [-1, 1]) {
       ctx.beginPath();
-      ctx.moveTo(c * 0.5, 0);
-      ctx.lineTo(c * 0.78, 0);
-      ctx.moveTo(c * 0.78, 0);
-      ctx.lineTo(c * 0.92, -c * 0.1);
-      ctx.moveTo(c * 0.78, 0);
-      ctx.lineTo(c * 0.92, c * 0.1);
-      ctx.stroke();
+      ctx.ellipse(c * 0.04, lado * c * 0.2, c * 0.13, c * 0.14 * abertura, 0, 0, TAU);
+      pintar(ctx, machucada ? '#ffffff' : aceso, CONTORNO, traco * 0.6);
+      ctx.fillStyle = '#120612';
+      ctx.beginPath();
+      ctx.ellipse(c * 0.08, lado * c * 0.2, c * 0.05, c * 0.12 * abertura, 0, 0, TAU);
+      ctx.fill();
     }
     ctx.restore();
 
+    // lingua, so com a boca quase fechada
+    if (abre < 0.2 && Math.sin(this.tempo / 240) > 0.7) {
+      ctx.strokeStyle = '#ff3a68';
+      ctx.lineWidth = Math.max(1.6, c * 0.07);
+      ctx.beginPath();
+      ctx.moveTo(c * 0.55, 0);
+      ctx.lineTo(c * 0.82, 0);
+      ctx.moveTo(c * 0.82, 0);
+      ctx.lineTo(c * 0.98, -c * 0.11);
+      ctx.moveTo(c * 0.82, 0);
+      ctx.lineTo(c * 0.98, c * 0.11);
+      ctx.stroke();
+    }
     ctx.restore();
   }
 

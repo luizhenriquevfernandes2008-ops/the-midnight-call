@@ -183,23 +183,38 @@ export function telaVitoria(ctx, jogo, t) {
   ctx.restore();
 }
 
+// Tutorial: UMA linha por vez, embaixo, pequena. A versao anterior jogava
+// seis linhas num painel que cobria um sexto da arena — o jogador nao le
+// seis regras de uma vez, e ainda perdia de vista o bicho que vinha.
 export function telaTutorial(ctx, jogo, t) {
-  const a = limita(t / 0.8, 0, 1) * limita((10 - t) / 1.6, 0, 1);
-  if (a <= 0) return;
-  ctx.save();
-  ctx.globalAlpha = a;
   const linhas = D.textos.tutorial;
-  const h = linhas.length * 22 + 26;
-  ctx.fillStyle = 'rgba(6,4,10,0.72)';
-  retanguloRedondo(ctx, 240, 400, 480, h, 8);
+  const porLinha = 4.5;
+  const total = linhas.length * porLinha;
+  if (t > total) return;
+  const i = Math.min(linhas.length - 1, Math.floor(t / porLinha));
+  const local = t - i * porLinha;
+  const a = Math.min(1, local / 0.4) * Math.min(1, (porLinha - local) / 0.5);
+  if (a <= 0) return;
+
+  const txt = linhas[i];
+  ctx.save();
+  ctx.font = 'bold 15px "Trebuchet MS", sans-serif';
+  const w = ctx.measureText(txt).width + 44;
+  ctx.globalAlpha = a * 0.8;
+  ctx.fillStyle = 'rgba(6,4,10,0.9)';
+  retanguloRedondo(ctx, 480 - w / 2, 468, w, 30, 15);
   ctx.fill();
-  ctx.strokeStyle = 'rgba(255,90,110,0.25)';
+  ctx.strokeStyle = 'rgba(255,120,140,0.3)';
   ctx.lineWidth = 1;
   ctx.stroke();
-  linhas.forEach((l, i) => texto(ctx, l, 480, 424 + i * 22, {
-    tam: 13, cor: 'rgba(210,200,190,0.85)', alinha: 'centro', espaco: 1,
-  }));
   ctx.restore();
+
+  texto(ctx, txt, 480, 483, {
+    tam: 15, cor: '#e8dccc', alinha: 'centro', espaco: 0.5, alfa: a,
+  });
+  texto(ctx, (i + 1) + '/' + linhas.length, 480, 505, {
+    tam: 10, cor: 'rgba(160,150,150,0.55)', alinha: 'centro', espaco: 1, alfa: a,
+  });
 }
 
 function romano(n) {
