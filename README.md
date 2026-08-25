@@ -11,6 +11,19 @@ Built from scratch in HTML5 Canvas. No engine, no build step, no dependencies.
 
 ---
 
+## Also in this repository: **OUROBOROS**
+
+[`ouroboros/`](ouroboros/) is a second, separate game — *roguelike da
+serpente*: snake turned into a dark dungeon roguelike, with six circles,
+phase-based bosses, relics, curses and a 3D WebGL menu. Same house rules as
+this project: HTML, JavaScript and JSON only, no engine, no dependency, no
+image or audio file.
+
+Run it with `ouroboros/ABRIR_OUROBOROS.bat` (Windows) or
+`ouroboros/abrir_ouroboros.sh`. See [`ouroboros/README.md`](ouroboros/README.md).
+
+---
+
 ## Running it
 
 **Double-click `JOGO_OFFLINE.html`.** No server, no Python, no internet, no

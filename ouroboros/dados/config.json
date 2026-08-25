@@ -1,0 +1,43 @@
+{
+  "_": "Numeros globais do jogo. Mexer aqui muda o balanceamento inteiro sem tocar em codigo.",
+  "tela": { "largura": 960, "altura": 540 },
+  "arena": { "colunas": 32, "linhas": 17, "celula": 26, "margemX": 64, "margemY": 66 },
+  "cobra": {
+    "vidaInicial": 5,
+    "vidaMaxima": 14,
+    "comprimentoInicial": 5,
+    "tickBase": 122,
+    "tickMinimo": 58,
+    "danoMordida": 2,
+    "energiaMaxima": 100,
+    "energiaRegen": 17,
+    "invulneravelAoDano": 640,
+    "danoParede": 1,
+    "bote": { "custo": 32, "recarga": 850, "celulas": 4, "dano": 5, "invulneravel": 340 },
+    "cuspe": { "custo": 24, "recarga": 480, "dano": 3, "velocidade": 13.5, "alcance": 14 },
+    "constricao": {
+      "danoBase": 7,
+      "danoPorCelula": 0.6,
+      "danoMaximo": 46,
+      "custoSegmentos": 1,
+      "recarga": 420,
+      "comprimentoMinimo": 6
+    },
+    "furiaMaxima": 100,
+    "furiaPorAlma": 3,
+    "furiaPorMorte": 8,
+    "devorar": { "duracao": 5400, "multiplicadorTick": 0.66, "dano": 14 }
+  },
+  "corrida": {
+    "almasPorNivel": [7, 11, 16, 22, 29, 37, 46, 56, 67, 79, 92, 106],
+    "essenciaPorSala": 4,
+    "essenciaPorChefe": 30,
+    "curaEntreAndares": 2,
+    "sementeVisivel": true
+  },
+  "dificuldade": {
+    "vidaInimigoPorAndar": 0.18,
+    "danoInimigoPorAndar": 0.11,
+    "velocidadeInimigoPorAndar": 0.05
+  }
+}

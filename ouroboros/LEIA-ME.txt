@@ -1,0 +1,79 @@
+================================================================
+  O U R O B O R O S
+  roguelike da serpente
+================================================================
+
+COMO ABRIR
+----------
+
+  Windows:        clique duas vezes em ABRIR_OUROBOROS.bat
+  Linux / macOS:  ./abrir_ouroboros.sh
+
+O jogo abre sozinho no navegador. DEIXE A JANELA PRETA ABERTA
+enquanto joga — ela e o servidor. Fechar a janela fecha o jogo.
+
+NAO abra o index.html clicando nele. O jogo e feito de modulos
+JavaScript, e todo navegador recusa modulo aberto direto do disco:
+a tela ia ficar presa no carregamento. Por isso existe o servidor.
+
+Se pedir Python: instale em https://python.org/downloads e marque
+"Add Python to PATH" na instalacao.
+
+
+CONTROLES
+---------
+
+  SETAS ou WASD    viram a cabeca
+  ESPACO (ou SHIFT)  BOTE: avanca rapido, atravessa o proprio
+                     corpo, machuca quem estiver no caminho e te
+                     deixa intocavel por um instante
+  E ou BOTAO DIREITO cospe veneno (se voce tiver a lingua para isso)
+  Q                  FURIA, quando a barra vermelha encher
+  ESC                pausa
+  M                  tira o som
+  ENTER              confirma
+  F1                 mostra fps e estado (para reportar bug)
+
+No menu tambem funciona o mouse: passar por cima ja seleciona,
+clicar confirma.
+
+
+AS TRES REGRAS QUE MUDAM TUDO
+-----------------------------
+
+1. CERCAR MATA. Se o seu corpo fechar um espaco — sozinho ou
+   usando as paredes — tudo que ficou preso dentro e ESMAGADO.
+   Isso se chama constricao, custa um pedaco da sua cauda, e e a
+   sua arma mais forte. Corredor apertado e o melhor lugar.
+
+2. BATER NO PROPRIO CORPO NAO MATA: ARRANCA. Voce perde a cauda a
+   partir do ponto da batida, e os pedacos caem no chao como alma.
+   Da para voltar e recolher — se o bicho deixar.
+
+3. COMPRIMENTO E PODER E RISCO. Corpo comprido cerca mais gente e
+   alimenta varias reliquias, mas fecha as suas proprias saidas.
+
+
+COMO FUNCIONA UMA DESCIDA
+-------------------------
+
+Seis circulos, cada um com salas de bicho e uma camara de chefe no
+fim. Limpar a sala abre a porta. Cada nivel te da tres cartas de
+MELHORIA; cada chefe morto te da tres cartas de RELIQUIA.
+
+Voce vai morrer. Faz parte. O que sobra da morte e a ESSENCIA, e
+com ela voce compra no ALTAR DOS OSSOS melhorias que valem para
+todas as descidas seguintes. O COMPENDIO guarda o verbete de todo
+bicho que ja te apareceu.
+
+
+SE ALGO QUEBRAR
+---------------
+
+Se aparecer a tela "O poco engasgou", clique em COPIAR O ERRO e
+cole o texto no chat. Esse texto diz exatamente o que quebrou —
+vale mais do que qualquer descricao do que voce viu.
+
+Se o navegador nao abrir sozinho, olhe o endereco escrito na
+janela preta (algo como http://localhost:8140/index.html) e cole
+no navegador.

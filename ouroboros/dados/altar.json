@@ -1,0 +1,13 @@
+{
+  "_": "Altar dos Ossos: progressao permanente, comprada com essencia entre corridas.",
+  "lista": [
+    { "id": "vida_base", "nome": "Ossos Recozidos", "texto": "+1 de vida inicial por nivel.", "custo": 40, "escala": 1.7, "niveis": 5, "mods": { "vidaMax": 1 } },
+    { "id": "dano_base", "nome": "Presas Herdadas", "texto": "+1 de dano de mordida por nivel.", "custo": 45, "escala": 1.7, "niveis": 5, "mods": { "danoMordida": 1 } },
+    { "id": "velocidade_base", "nome": "Ninhada Agil", "texto": "Comeca 4% mais rapido por nivel.", "custo": 55, "escala": 1.8, "niveis": 3, "mods": { "tickMult": -0.04 } },
+    { "id": "energia_base", "nome": "Pulmao de Pedra", "texto": "+15 de energia inicial por nivel.", "custo": 35, "escala": 1.6, "niveis": 3, "mods": { "energiaMax": 15 } },
+    { "id": "sorte", "nome": "Dedo do Barqueiro", "texto": "Cartas raras aparecem mais.", "custo": 70, "escala": 2.0, "niveis": 3, "mods": { "sorte": 0.12 } },
+    { "id": "cuspe_inicial", "nome": "Lingua Herdada", "texto": "Comeca a corrida ja cuspindo veneno.", "custo": 120, "escala": 1, "niveis": 1, "marca": "cuspe" },
+    { "id": "bolso", "nome": "Bolso de Alma", "texto": "Comeca cada corrida com 1 reliquia sorteada.", "custo": 200, "escala": 1, "niveis": 1, "marca": "reliquia_inicial" },
+    { "id": "atalho", "nome": "Corda para o Fundo", "texto": "Libera comecar direto no andar que voce ja venceu.", "custo": 150, "escala": 1, "niveis": 1, "marca": "atalho" }
+  ]
+}

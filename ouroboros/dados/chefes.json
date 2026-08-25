@@ -1,0 +1,125 @@
+{
+  "_": "Chefes. O padrao (a lista 'ataques') e executado em js/jogo/chefes.js; aqui ficam vida, tempos e falas.",
+  "lista": [
+    {
+      "id": "mae_dos_ovos",
+      "nome": "A MAE DOS OVOS",
+      "titulo": "aquela que nunca terminou de parir",
+      "vida": 240, "tamanho": 3, "contato": 3, "almas": 40,
+      "cor": "#7a3a5a", "brilho": "#ff8ac0",
+      "grito": "Voce tambem foi um ovo. Alguem te chocou errado.",
+      "morte": "Ela para de tremer. Os ovos param junto.",
+      "fases": [
+        { "ate": 1.00, "intervalo": 2100, "ataques": ["ovos", "investida"] },
+        { "ate": 0.60, "intervalo": 1650, "ataques": ["ovos", "investida", "onda"] },
+        { "ate": 0.28, "intervalo": 1150, "ataques": ["onda", "investida", "ovos", "chuva"] }
+      ],
+      "parametros": {
+        "ovosPorVez": 3, "tempoChoco": 4200, "filhote": "larva",
+        "velocidadeInvestida": 62, "danoInvestida": 3,
+        "raioOnda": 9, "danoOnda": 3, "tirosChuva": 10
+      }
+    },
+    {
+      "id": "o_afogado",
+      "nome": "O AFOGADO",
+      "titulo": "o que desceu para buscar e ficou",
+      "vida": 320, "tamanho": 3, "contato": 3, "almas": 55,
+      "cor": "#2a5a5a", "brilho": "#7affe0",
+      "grito": "Segura minha mao. Segura. Segura.",
+      "morte": "A agua desce. Fica o formato de um homem no lodo.",
+      "fases": [
+        { "ate": 1.00, "intervalo": 1900, "ataques": ["mare", "vomito"] },
+        { "ate": 0.65, "intervalo": 1500, "ataques": ["mare", "vomito", "maos"] },
+        { "ate": 0.30, "intervalo": 1050, "ataques": ["mergulho", "maos", "vomito", "mare"] }
+      ],
+      "parametros": {
+        "celulasMare": 26, "duracaoMare": 6500,
+        "tirosVomito": 7, "danoVomito": 3, "velocidadeVomito": 8,
+        "maosPorVez": 4, "danoMao": 3, "avisoMao": 900,
+        "duracaoMergulho": 1600
+      }
+    },
+    {
+      "id": "ferreiro_cego",
+      "nome": "O FERREIRO CEGO",
+      "titulo": "bate no que ouve, e ouve tudo",
+      "vida": 400, "tamanho": 3, "contato": 4, "almas": 70,
+      "cor": "#7a2a12", "brilho": "#ffb04a",
+      "grito": "Fica quieto que eu acerto de primeira.",
+      "morte": "O martelo cai. O chao agradece em rachadura.",
+      "fases": [
+        { "ate": 1.00, "intervalo": 1800, "ataques": ["martelo", "bigorna"] },
+        { "ate": 0.66, "intervalo": 1450, "ataques": ["martelo", "feixe", "bigorna"] },
+        { "ate": 0.30, "intervalo": 980, "ataques": ["feixe", "martelo", "bigorna", "forja"] }
+      ],
+      "parametros": {
+        "avisoMartelo": 850, "raioMartelo": 3.4, "danoMartelo": 4, "rachadurasMartelo": 7,
+        "velocidadeFeixe": 0.9, "danoFeixe": 3, "duracaoFeixe": 5200,
+        "bigornas": 3, "danoBigorna": 3, "duracaoParede": 8000,
+        "brasasForja": 4
+      }
+    },
+    {
+      "id": "o_enxame",
+      "nome": "O ENXAME",
+      "titulo": "um bicho feito de muitos que discordam",
+      "vida": 340, "tamanho": 3, "contato": 2, "almas": 80,
+      "cor": "#8a6a10", "brilho": "#ffe07a",
+      "grito": "Nos. Nos. Nos. Nos. Nos.",
+      "morte": "Cai um zumbido de cada vez, ate sobrar o seu.",
+      "fases": [
+        { "ate": 1.00, "intervalo": 1750, "ataques": ["dispersar", "investida"] },
+        { "ate": 0.66, "intervalo": 1400, "ataques": ["dispersar", "coluna", "investida"] },
+        { "ate": 0.32, "intervalo": 950, "ataques": ["coluna", "dispersar", "investida", "furia"] }
+      ],
+      "parametros": {
+        "vespasDispersao": 7, "duracaoDispersao": 5200, "reducaoDano": 0.35,
+        "colunas": 5, "avisoColuna": 800, "danoColuna": 3,
+        "velocidadeInvestida": 70, "danoInvestida": 3,
+        "vespasFuria": 10
+      }
+    },
+    {
+      "id": "o_ceifador",
+      "nome": "O CEIFADOR",
+      "titulo": "paga por comprimento, nao por cabeca",
+      "vida": 460, "tamanho": 3, "contato": 4, "almas": 100,
+      "cor": "#6a1a2a", "brilho": "#ff4a5a",
+      "grito": "Voce cresceu demais. Vou acertar isso.",
+      "morte": "A foice cai antes dele. Ele cai como quem ja sabia.",
+      "fases": [
+        { "ate": 1.00, "intervalo": 1900, "ataques": ["foice", "salto"] },
+        { "ate": 0.68, "intervalo": 1450, "ataques": ["foice", "salto", "ceifa"] },
+        { "ate": 0.34, "intervalo": 900, "ataques": ["escuridao", "ceifa", "foice", "salto"] }
+      ],
+      "parametros": {
+        "raioFoice": 5.2, "danoFoice": 4, "cortaSegmentos": 4, "avisoFoice": 780,
+        "linhasCeifa": 3, "avisoCeifa": 950, "danoCeifa": 4,
+        "duracaoEscuridao": 7000, "raioEscuridao": 4.2,
+        "avisoSalto": 700
+      }
+    },
+    {
+      "id": "ouroboros",
+      "nome": "OUROBOROS",
+      "titulo": "voce, com mais tempo de casa",
+      "vida": 620, "tamanho": 1, "contato": 4, "almas": 200,
+      "cor": "#8a0a2a", "brilho": "#ff2a6a",
+      "grito": "Eu tambem achei que estava descendo.",
+      "morte": "Ele encontra a propria cauda. E come. E some.",
+      "fases": [
+        { "ate": 1.00, "intervalo": 2100, "ataques": ["espelho", "cuspe"] },
+        { "ate": 0.70, "intervalo": 1600, "ataques": ["espelho", "cuspe", "cerco"] },
+        { "ate": 0.35, "intervalo": 1100, "ataques": ["anel", "cerco", "cuspe", "espelho"] }
+      ],
+      "parametros": {
+        "comprimentoInicial": 14, "crescimentoPorFase": 8, "passo": 132, "passoFinal": 96,
+        "danoCorpo": 3, "danoCabeca": 5,
+        "tirosCuspe": 5, "velocidadeCuspe": 9, "danoCuspe": 3,
+        "celulasCerco": 12, "duracaoCerco": 5000,
+        "raioAnel": 6.5, "danoAnel": 5, "duracaoAnel": 6000
+      }
+    }
+  ]
+}

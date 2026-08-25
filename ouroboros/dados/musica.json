@@ -1,0 +1,103 @@
+{
+  "_": "Nao existe arquivo de musica neste jogo. Existem estas receitas, e um sintetizador que toca elas ao vivo em js/nucleo/audio.js.",
+  "escalas": {
+    "menor":            [0, 2, 3, 5, 7, 8, 10],
+    "frigio":           [0, 1, 3, 5, 7, 8, 10],
+    "frigioDominante":  [0, 1, 4, 5, 7, 8, 10],
+    "menorHarmonica":   [0, 2, 3, 5, 7, 8, 11],
+    "locrio":           [0, 1, 3, 5, 6, 8, 10],
+    "diminuta":         [0, 2, 3, 5, 6, 8, 9, 11]
+  },
+  "faixas": {
+    "menu": {
+      "nome": "Sala de Espera do Poco",
+      "bpm": 58, "raiz": 38, "escala": "frigio", "progressao": [0, 0, 5, 3],
+      "compassos": 4, "filtro": 780, "reverb": 0.55,
+      "camadas": { "drone": 0.55, "pad": 0.5, "baixo": 0.34, "arp": 0.26, "sino": 0.4, "perc": 0.16 },
+      "arpPadrao": [0, 2, 4, 6, 4, 2], "arpDiv": 3, "arpOitava": 1,
+      "percPadrao": "k-------k-------",
+      "sinoChance": 0.22
+    },
+    "cripta": {
+      "nome": "Terra na Boca",
+      "bpm": 84, "raiz": 36, "escala": "frigio", "progressao": [0, 0, 3, 2],
+      "compassos": 4, "filtro": 620, "reverb": 0.42,
+      "camadas": { "drone": 0.5, "pad": 0.34, "baixo": 0.5, "arp": 0.22, "sino": 0.2, "perc": 0.42 },
+      "arpPadrao": [0, 4, 2, 4], "arpDiv": 4, "arpOitava": 1,
+      "percPadrao": "k--h--t-k-h---h-",
+      "sinoChance": 0.12
+    },
+    "charco": {
+      "nome": "Agua Parada",
+      "bpm": 76, "raiz": 34, "escala": "locrio", "progressao": [0, 4, 0, 6],
+      "compassos": 4, "filtro": 520, "reverb": 0.7,
+      "camadas": { "drone": 0.62, "pad": 0.44, "baixo": 0.42, "arp": 0.3, "sino": 0.26, "perc": 0.3 },
+      "arpPadrao": [0, 3, 5, 3, 2, 5], "arpDiv": 3, "arpOitava": 1,
+      "percPadrao": "k---t---k---t--h",
+      "sinoChance": 0.2
+    },
+    "forja": {
+      "nome": "O Martelo Nao Para",
+      "bpm": 104, "raiz": 33, "escala": "frigioDominante", "progressao": [0, 0, 1, 0],
+      "compassos": 4, "filtro": 900, "reverb": 0.3,
+      "camadas": { "drone": 0.4, "pad": 0.24, "baixo": 0.62, "arp": 0.36, "sino": 0.16, "perc": 0.6 },
+      "arpPadrao": [0, 0, 3, 0, 4, 3], "arpDiv": 4, "arpOitava": 1,
+      "percPadrao": "k-khs-k-kh-ks-h-",
+      "sinoChance": 0.08
+    },
+    "ninho": {
+      "nome": "Mil Bocas Pequenas",
+      "bpm": 118, "raiz": 37, "escala": "diminuta", "progressao": [0, 2, 4, 6],
+      "compassos": 4, "filtro": 1200, "reverb": 0.36,
+      "camadas": { "drone": 0.34, "pad": 0.26, "baixo": 0.5, "arp": 0.46, "sino": 0.22, "perc": 0.54 },
+      "arpPadrao": [0, 1, 2, 3, 4, 5, 4, 3], "arpDiv": 6, "arpOitava": 2,
+      "percPadrao": "k-hhk-hhk-hhkhhh",
+      "sinoChance": 0.14
+    },
+    "silencio": {
+      "nome": "Luz Emprestada",
+      "bpm": 66, "raiz": 31, "escala": "menorHarmonica", "progressao": [0, 5, 3, 4],
+      "compassos": 4, "filtro": 430, "reverb": 0.82,
+      "camadas": { "drone": 0.7, "pad": 0.56, "baixo": 0.3, "arp": 0.16, "sino": 0.46, "perc": 0.18 },
+      "arpPadrao": [0, 4, 6], "arpDiv": 2, "arpOitava": 2,
+      "percPadrao": "k-------t-------",
+      "sinoChance": 0.34
+    },
+    "final": {
+      "nome": "Voce Chegando em Voce",
+      "bpm": 96, "raiz": 30, "escala": "menorHarmonica", "progressao": [0, 0, 6, 5],
+      "compassos": 4, "filtro": 760, "reverb": 0.6,
+      "camadas": { "drone": 0.6, "pad": 0.5, "baixo": 0.6, "arp": 0.42, "sino": 0.4, "perc": 0.5 },
+      "arpPadrao": [0, 2, 4, 7, 4, 2], "arpDiv": 4, "arpOitava": 1,
+      "percPadrao": "k--kt-h-k--kt-hh",
+      "sinoChance": 0.24
+    },
+    "chefe": {
+      "nome": "Algo Grande Acordou",
+      "bpm": 128, "raiz": 32, "escala": "frigioDominante", "progressao": [0, 0, 1, 1],
+      "compassos": 2, "filtro": 1100, "reverb": 0.34,
+      "camadas": { "drone": 0.5, "pad": 0.3, "baixo": 0.72, "arp": 0.5, "sino": 0.2, "perc": 0.75 },
+      "arpPadrao": [0, 0, 4, 0, 3, 4, 0, 6], "arpDiv": 8, "arpOitava": 1,
+      "percPadrao": "k-hkt-hkk-hkt-hk",
+      "sinoChance": 0.1, "tritono": true
+    },
+    "chefeFinal": {
+      "nome": "A Boca e a Cauda",
+      "bpm": 138, "raiz": 30, "escala": "diminuta", "progressao": [0, 3, 1, 5],
+      "compassos": 2, "filtro": 1400, "reverb": 0.44,
+      "camadas": { "drone": 0.6, "pad": 0.4, "baixo": 0.8, "arp": 0.6, "sino": 0.3, "perc": 0.85 },
+      "arpPadrao": [0, 2, 5, 2, 7, 5, 2, 0], "arpDiv": 8, "arpOitava": 1,
+      "percPadrao": "kkhkt-hkkhhkt-kh",
+      "sinoChance": 0.16, "tritono": true
+    },
+    "vitoria": {
+      "nome": "Silencio do Poco",
+      "bpm": 54, "raiz": 41, "escala": "menor", "progressao": [0, 3, 5, 4],
+      "compassos": 4, "filtro": 1600, "reverb": 0.75,
+      "camadas": { "drone": 0.4, "pad": 0.62, "baixo": 0.3, "arp": 0.3, "sino": 0.55, "perc": 0.0 },
+      "arpPadrao": [0, 2, 4, 6, 7], "arpDiv": 3, "arpOitava": 2,
+      "percPadrao": "----------------",
+      "sinoChance": 0.4
+    }
+  }
+}

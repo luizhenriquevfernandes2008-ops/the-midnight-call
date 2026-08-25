@@ -1,0 +1,23 @@
+{
+  "_": "Melhorias: escolhidas a cada nivel dentro da corrida. Empilham; reliquias nao.",
+  "lista": [
+    { "id": "presas", "nome": "Presas Afiadas", "texto": "+1 de dano na mordida.", "icone": "presa", "mods": { "danoMordida": 1 }, "maximo": 8 },
+    { "id": "couro", "nome": "Couro Grosso", "texto": "+2 de vida maxima e cura 2.", "icone": "coracao", "mods": { "vidaMax": 2 }, "cura": 2, "maximo": 6 },
+    { "id": "musculo", "nome": "Musculo Liso", "texto": "Anda 6% mais rapido.", "icone": "raio", "mods": { "tickMult": -0.06 }, "maximo": 6 },
+    { "id": "aperto", "nome": "Aperto", "texto": "+35% de dano de constricao.", "icone": "corda", "mods": { "danoConstricao": 0.35 }, "maximo": 6 },
+    { "id": "folego", "nome": "Folego", "texto": "+20 de energia maxima e regen melhor.", "icone": "sopro", "mods": { "energiaMax": 20, "energiaRegen": 5 }, "maximo": 5 },
+    { "id": "impulso", "nome": "Impulso", "texto": "Bote recarrega 20% mais rapido.", "icone": "bote", "mods": { "recargaBote": -0.2 }, "maximo": 4 },
+    { "id": "estomago", "nome": "Estomago Fundo", "texto": "+25% de almas.", "icone": "dente", "mods": { "almasMult": 0.25 }, "maximo": 5 },
+    { "id": "casca", "nome": "Casca", "texto": "+1 de armadura.", "icone": "escama", "mods": { "armadura": 1 }, "maximo": 4 },
+    { "id": "faro", "nome": "Faro", "texto": "Recolhe almas de mais longe.", "icone": "ima", "mods": { "raioColeta": 2 }, "maximo": 4 },
+    { "id": "bile", "nome": "Bile Concentrada", "texto": "+2 de dano de cuspe.", "icone": "gota", "mods": { "danoCuspe": 2 }, "maximo": 5, "requer": "cuspe" },
+    { "id": "peconha", "nome": "Peconha", "texto": "+3 de dano de bote.", "icone": "casco", "mods": { "danoBote": 3 }, "maximo": 5 },
+    { "id": "avidez", "nome": "Avidez", "texto": "Furia enche 40% mais rapido.", "icone": "febre", "mods": { "furiaMult": 0.4 }, "maximo": 4 },
+    { "id": "reflexo", "nome": "Reflexo", "texto": "Invulnerabilidade apos tomar dano dura mais.", "icone": "gelo", "mods": { "invulneravel": 180 }, "maximo": 3 },
+    { "id": "veia", "nome": "Veia Preta", "texto": "+8% de dano em tudo.", "icone": "sangue", "mods": { "danoGeral": 0.08 }, "maximo": 8 },
+    { "id": "pele_dura", "nome": "Pele Dura", "texto": "Bater na parede nao machuca mais.", "icone": "muda", "marca": "parede_segura", "maximo": 1 },
+    { "id": "espinha", "nome": "Espinha Dorsal", "texto": "Comeca cada sala com 2 segmentos a mais.", "icone": "espinho", "mods": { "segmentosPorSala": 2 }, "maximo": 4 },
+    { "id": "essencia_extra", "nome": "Bolso Furado", "texto": "+35% de essencia.", "icone": "moeda", "mods": { "essenciaMult": 0.35 }, "maximo": 4 },
+    { "id": "olho_extra", "nome": "Olho Extra", "texto": "Perigos e telegrafos ficam bem mais visiveis.", "icone": "olho", "marca": "olho_abismo", "maximo": 1 }
+  ]
+}

@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>OUROBOROS — roguelike da serpente</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ccircle cx='32' cy='32' r='23' fill='none' stroke='%23ff2a6a' stroke-width='9'/%3E%3Ccircle cx='49' cy='20' r='4' fill='%23ffe66a'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="css/estilo.css">
+</head>
+<body>
+  <div id="palco">
+    <canvas id="jogo" width="960" height="540"></canvas>
+    <canvas id="cena3d" width="960" height="540"></canvas>
+    <canvas id="frente" width="960" height="540"></canvas>
+  </div>
+
+  <div id="boot">
+    <div class="boot-dentro">
+      <p class="boot-titulo">OUROBOROS</p>
+      <p class="boot-msg" id="boot-msg">descendo&#8230;</p>
+      <div class="boot-anel"></div>
+    </div>
+  </div>
+
+  <div id="crash" hidden>
+    <div class="crash-dentro">
+      <p class="crash-titulo">O poco engasgou.</p>
+      <pre id="crash-msg"></pre>
+      <div class="crash-acoes">
+        <button id="crash-copiar" type="button">COPIAR O ERRO</button>
+        <button id="crash-recarregar" type="button">RECARREGAR</button>
+        <span id="crash-copiado"></span>
+      </div>
+      <p class="crash-dica">
+        Clique em COPIAR O ERRO e cole no chat. Esse texto diz exatamente o que quebrou —
+        vale mais do que qualquer descricao do que voce viu.
+      </p>
+    </div>
+  </div>
+
+  <script>
+    // Rede de seguranca. Modulo que explode em silencio deixa tela preta e
+    // nenhuma pista; aqui o erro vira texto que se copia com um clique.
+    (function () {
+      function ambiente() {
+        var a = window.ouroboros;
+        var l = [
+          'navegador: ' + navigator.userAgent,
+          'tela: ' + window.innerWidth + 'x' + window.innerHeight + ' dpr' + (window.devicePixelRatio || 1),
+          'url: ' + location.href,
+        ];
+        if (a) {
+          l.push('estado: ' + a.estado + '   fps: ' + (a.fps ? a.fps.toFixed(0) : '-') + '   webgl: ' + a.temWebGL);
+          if (a.jogo && a.jogo.corrida) {
+            l.push('corrida: andar ' + (a.jogo.corrida.andar + 1) + ' sala ' + (a.jogo.corrida.sala + 1) +
+              ' estado ' + a.jogo.estado + ' semente ' + a.jogo.corrida.semente);
+          }
+        } else {
+          var b = document.getElementById('boot-msg');
+          l.push('o jogo nem chegou a carregar; parou em: "' + (b ? b.textContent : '?') + '"');
+        }
+        return l.join('\n');
+      }
+
+      function mostrar(titulo, detalhe) {
+        var cx = document.getElementById('crash');
+        var msg = document.getElementById('crash-msg');
+        if (!cx || cx.hidden === false) return;
+        cx.hidden = false;
+        msg.textContent = titulo + '\n\n' + detalhe + '\n\n--- ambiente ---\n' + ambiente();
+        var boot = document.getElementById('boot');
+        if (boot) boot.hidden = true;
+      }
+      window.__falhou = mostrar;
+
+      window.addEventListener('error', function (e) {
+        mostrar('Erro: ' + (e.message || 'desconhecido'),
+          (e.filename || '') + ':' + (e.lineno || '?') + '\n' + ((e.error && e.error.stack) || ''));
+      });
+      window.addEventListener('unhandledrejection', function (e) {
+        var r = e.reason || {};
+        mostrar('Promessa rejeitada: ' + (r.message || r), r.stack || '');
+      });
+
+      document.addEventListener('DOMContentLoaded', function () {
+        document.getElementById('crash-copiar').addEventListener('click', function () {
+          var t = document.getElementById('crash-msg').textContent;
+          function avisar() { document.getElementById('crash-copiado').textContent = 'copiado'; }
+          if (navigator.clipboard) navigator.clipboard.writeText(t).then(avisar, avisar);
+          else {
+            var ta = document.createElement('textarea');
+            ta.value = t; document.body.appendChild(ta); ta.select();
+            try { document.execCommand('copy'); } catch (err) { /* sem sorte */ }
+            document.body.removeChild(ta); avisar();
+          }
+        });
+        document.getElementById('crash-recarregar').addEventListener('click', function () {
+          location.reload();
+        });
+      });
+    })();
+  </script>
+
+  <script type="module" src="js/main.js"></script>
+</body>
+</html>

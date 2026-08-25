@@ -1,0 +1,74 @@
+{
+  "_": "Todo texto que aparece na tela. Trocar aqui traduz o jogo inteiro.",
+  "jogo": {
+    "titulo": "OUROBOROS",
+    "subtitulo": "a serpente desce para encontrar a propria cauda"
+  },
+  "menu": {
+    "jogar": "DESCER",
+    "continuar": "CONTINUAR A DESCIDA",
+    "altar": "ALTAR DOS OSSOS",
+    "compendio": "COMPENDIO",
+    "opcoes": "OPCOES",
+    "creditos": "CREDITOS",
+    "voltar": "VOLTAR",
+    "sair": "FECHAR"
+  },
+  "hud": {
+    "vida": "VIDA", "energia": "FOLEGO", "furia": "FURIA",
+    "andar": "ANDAR", "sala": "SALA", "almas": "ALMAS",
+    "comprimento": "CORPO", "essencia": "ESSENCIA", "nivel": "NIVEL"
+  },
+  "aviso": {
+    "salaLimpa": "A sala esta quieta. Ache a passagem.",
+    "chefe": "ALGO GRANDE ACORDOU",
+    "nivel": "NIVEL ACIMA",
+    "reliquia": "ESCOLHA O QUE VAI CARREGAR",
+    "constricao": "CONSTRICAO",
+    "severado": "A CAUDA FOI ARRANCADA",
+    "semEnergia": "SEM FOLEGO",
+    "andarLimpo": "O CIRCULO SE FECHOU"
+  },
+  "tutorial": [
+    "SETAS ou WASD viram a cabeca.",
+    "ESPACO da o BOTE: atravessa o proprio corpo e machuca quem estiver no caminho.",
+    "Cerque um bicho com o seu corpo e ele e ESMAGADO. Isso se chama constricao.",
+    "Bater no proprio corpo arranca a cauda. Bater na parede so doi.",
+    "Q solta a FURIA quando a barra encher.",
+    "E ou botao direito cospe veneno, se voce tiver a lingua para isso."
+  ],
+  "morte": [
+    "A descida continua sem voce.",
+    "Voce virou parte do chao. O chao nem percebeu.",
+    "Nao foi o bicho. Foi a pressa.",
+    "Toda cobra encontra a propria cauda. Poucas sobrevivem ao encontro.",
+    "O poco anotou seu nome e apagou logo em seguida.",
+    "Faltou pouco. Sempre falta pouco."
+  ],
+  "vitoria": {
+    "titulo": "O CIRCULO SE FECHOU",
+    "texto": "Voce encontrou a cauda. Era a sua. Sempre foi.\nO poco fica em silencio por um tempo — e recomeca."
+  },
+  "dicas": [
+    "Corredor apertado e onde a constricao funciona melhor.",
+    "Corpo comprido machuca mais com Pacto da Cauda, mas fecha suas saidas.",
+    "O bote atravessa o proprio corpo. Use para sair de um no.",
+    "Bicho preso em canto morre esmagado sem custar vida.",
+    "Cauda arrancada vira alma no chao. Volte e recolha.",
+    "Chefe cansa: cada fase tem um ritmo diferente. Escute a musica.",
+    "Reliquia maldita quase sempre vale a pena. Quase."
+  ],
+  "creditos": [
+    "OUROBOROS",
+    "um roguelike de cobra, feito no escuro",
+    "",
+    "codigo, arte, som e desenho de jogo",
+    "escritos do zero em HTML, JavaScript e JSON",
+    "sem engine, sem biblioteca, sem arquivo de audio",
+    "",
+    "toda musica que voce ouviu foi calculada",
+    "nota por nota enquanto voce jogava",
+    "",
+    "obrigado por descer ate aqui"
+  ]
+}

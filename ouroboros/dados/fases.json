@@ -1,0 +1,126 @@
+{
+  "_": "Os seis circulos da descida. A ordem da lista e a ordem do jogo.",
+  "andares": [
+    {
+      "id": "cripta",
+      "nome": "A CRIPTA",
+      "subtitulo": "Primeiro circulo — onde enterraram o que ainda mastiga",
+      "epigrafe": "Voce acordou com terra na boca. A terra tinha gosto de nome proprio.",
+      "salas": 3,
+      "inimigos": ["larva", "carniceiro", "saltador", "mordedor", "gerador"],
+      "perigos": ["espinho"],
+      "densidadeParede": 0.10,
+      "estilos": ["pilares", "cruz", "camaras"],
+      "chefe": "mae_dos_ovos",
+      "luz": 0,
+      "musica": "cripta",
+      "paleta": {
+        "fundo": "#0b0a0e", "fundo2": "#151119", "grade": "#1d1a24",
+        "parede": "#2a2530", "paredeTopo": "#3d3644", "paredeLuz": "#554a5e",
+        "acento": "#b04a5a", "nevoa": "#1a1220", "chao": "#121016"
+      }
+    },
+    {
+      "id": "charco",
+      "nome": "O CHARCO",
+      "subtitulo": "Segundo circulo — a agua parada lembra de todo mundo",
+      "epigrafe": "Nao pise onde a agua estiver mais quieta. Ela esta escutando.",
+      "salas": 3,
+      "inimigos": ["afogado", "cuspidor", "larva", "bomba", "mordedor", "tecelao"],
+      "perigos": ["lodo", "espinho"],
+      "densidadeParede": 0.08,
+      "estilos": ["ilhas", "serpente", "camaras"],
+      "chefe": "o_afogado",
+      "luz": 0,
+      "musica": "charco",
+      "paleta": {
+        "fundo": "#050c0c", "fundo2": "#0a1618", "grade": "#132022",
+        "parede": "#1c2f30", "paredeTopo": "#2b4446", "paredeLuz": "#3d6160",
+        "acento": "#4ab09c", "nevoa": "#0d2020", "chao": "#0a1414"
+      }
+    },
+    {
+      "id": "forja",
+      "nome": "A FORJA",
+      "subtitulo": "Terceiro circulo — batem no ferro desde antes de existir ferro",
+      "epigrafe": "O martelo nao para. Se parar, e porque acharam material melhor.",
+      "salas": 3,
+      "inimigos": ["brasa", "carniceiro", "cuspidor", "bomba", "saltador", "tecelao"],
+      "perigos": ["fogo", "espinho"],
+      "densidadeParede": 0.13,
+      "estilos": ["fornalha", "pilares", "corredores"],
+      "chefe": "ferreiro_cego",
+      "luz": 0,
+      "musica": "forja",
+      "paleta": {
+        "fundo": "#0e0705", "fundo2": "#1c0d07", "grade": "#2a140c",
+        "parede": "#3a1f12", "paredeTopo": "#57301c", "paredeLuz": "#7a4526",
+        "acento": "#ff7a2a", "nevoa": "#2a1008", "chao": "#170b06"
+      }
+    },
+    {
+      "id": "ninho",
+      "nome": "O NINHO",
+      "subtitulo": "Quarto circulo — mil bocas pequenas contando a mesma coisa",
+      "epigrafe": "Elas nao odeiam voce. Elas so tem filhotes e voce e comida.",
+      "salas": 4,
+      "inimigos": ["vespa", "gerador", "tecelao", "brasa", "mordedor", "espectro"],
+      "perigos": ["teia", "espinho"],
+      "densidadeParede": 0.11,
+      "estilos": ["favo", "ilhas", "camaras"],
+      "chefe": "o_enxame",
+      "luz": 0,
+      "musica": "ninho",
+      "paleta": {
+        "fundo": "#0d0a04", "fundo2": "#181205", "grade": "#251c0a",
+        "parede": "#3a2c10", "paredeTopo": "#55411a", "paredeLuz": "#7a5d26",
+        "acento": "#e0c04a", "nevoa": "#1e1608", "chao": "#151004"
+      }
+    },
+    {
+      "id": "silencio",
+      "nome": "O SILENCIO",
+      "subtitulo": "Quinto circulo — aqui a luz e emprestada e cobram juros",
+      "epigrafe": "Voce so enxerga o que esta colado em voce. Foi sempre assim.",
+      "salas": 4,
+      "inimigos": ["espectro", "olho", "ceifador_menor", "carniceiro", "mordedor"],
+      "perigos": ["vazio", "espinho"],
+      "densidadeParede": 0.09,
+      "estilos": ["vazio", "ilhas", "cruz"],
+      "chefe": "o_ceifador",
+      "luz": 6.5,
+      "musica": "silencio",
+      "paleta": {
+        "fundo": "#04040a", "fundo2": "#080a14", "grade": "#101424",
+        "parede": "#181c2e", "paredeTopo": "#252b44", "paredeLuz": "#3a4166",
+        "acento": "#7a8cff", "nevoa": "#0a0c1a", "chao": "#06070f"
+      }
+    },
+    {
+      "id": "ouroboros",
+      "nome": "OUROBOROS",
+      "subtitulo": "Ultimo circulo — a boca e a cauda finalmente se apresentam",
+      "epigrafe": "Nao existe fundo. Existe voce chegando em voce.",
+      "salas": 2,
+      "inimigos": ["ceifador_menor", "olho", "espectro", "brasa", "carniceiro"],
+      "perigos": ["vazio", "fogo"],
+      "densidadeParede": 0.07,
+      "estilos": ["anel", "vazio"],
+      "chefe": "ouroboros",
+      "luz": 0,
+      "musica": "final",
+      "paleta": {
+        "fundo": "#0a0208", "fundo2": "#170410", "grade": "#26081a",
+        "parede": "#330c22", "paredeTopo": "#4d1233", "paredeLuz": "#6e1c47",
+        "acento": "#ff2a6a", "nevoa": "#1c0512", "chao": "#120309"
+      }
+    }
+  ],
+  "perigos": {
+    "espinho": { "nome": "Espinhos", "dano": 2, "cor": "#a04a5a", "intervalo": 900 },
+    "fogo": { "nome": "Brasa", "dano": 2, "cor": "#ff7a2a", "intervalo": 620 },
+    "lodo": { "nome": "Lodo", "dano": 0, "cor": "#3a6a5a", "lentidao": 1.55 },
+    "teia": { "nome": "Teia", "dano": 0, "cor": "#8a8070", "lentidao": 1.85 },
+    "vazio": { "nome": "Vazio", "dano": 4, "cor": "#000000", "intervalo": 400 }
+  }
+}
