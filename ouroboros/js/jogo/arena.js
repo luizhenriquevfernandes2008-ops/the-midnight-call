@@ -127,12 +127,14 @@ export class Arena {
 
     // perigos espalhados
     if (andar.perigos && andar.perigos.length) {
-      const quantos = inteiro(r, 5, 12);
+      const quantos = andar.poucosPerigos ? inteiro(r, 2, 5) : inteiro(r, 5, 12);
       for (let k = 0; k < quantos; k++) {
         const nome = sorteia(r, andar.perigos);
         const idx = nomesPerigo.indexOf(nome) + 1;
         const cx = inteiro(r, 2, this.cols - 3), cy = inteiro(r, 2, this.rows - 3);
-        const tam = inteiro(r, 1, 3);
+        // Mancha pequena de proposito: perigo que machuca ocupando um quinto
+        // da sala deixa de ser obstaculo e vira pedagio.
+        const tam = inteiro(r, 1, 2);
         for (let a = 0; a < tam; a++) {
           for (let b = 0; b < tam; b++) {
             if (chance(r, 0.65)) this.poePerigo(cx + a, cy + b, idx, 0);

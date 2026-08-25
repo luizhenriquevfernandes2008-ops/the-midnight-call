@@ -110,7 +110,9 @@ export class Jogo {
     // Camara do chefe pede espaco: padrao de sala normal vira armadilha
     // quando o bicho ocupa 3x3 e enche a tela de projetil.
     const andarUsado = this.salaDeChefe
-      ? Object.assign({}, andar, { estilos: ['vazio', 'ilhas'], densidadeParede: 0.04 })
+      ? Object.assign({}, andar, {
+        estilos: ['vazio', 'ilhas'], densidadeParede: 0.04, poucosPerigos: true,
+      })
       : andar;
     this.arena.gerar(andarUsado, r.sala, sementeSala, this.nomesPerigo);
     this.inimigos.length = 0;
@@ -317,12 +319,17 @@ export class Jogo {
 
   aoMorrerInimigo(bicho) {
     const r = this.corrida;
-    const ganho = r.ganharAlma(bicho.def.almas || 1);
     const arena = this.arena;
     const p = bicho.posicao(arena);
-    for (let i = 0; i < Math.min(4, ganho); i++) {
+    // A alma NAO e creditada aqui: ela cai no chao e so conta quando for
+    // engolida. E o que da sentido ao ima, ao raio de coleta e ao risco de
+    // voltar buscar o que ficou para tras.
+    const total = bicho.def.almas || 1;
+    const pedacos = Math.min(3, total);
+    const porPedaco = Math.max(1, Math.round(total / pedacos));
+    for (let i = 0; i < pedacos; i++) {
       this.itens.push(new Item({
-        tipo: 'alma', cx: bicho.cx, cy: bicho.cy, valor: Math.ceil(ganho / Math.min(4, ganho)),
+        tipo: 'alma', cx: bicho.cx, cy: bicho.cy, valor: porPedaco,
         x: p.x + (Math.random() - 0.5) * 18, y: p.y + (Math.random() - 0.5) * 18,
       }));
     }

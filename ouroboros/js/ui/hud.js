@@ -99,7 +99,8 @@ export function desenharHud(ctx, jogo) {
   }
 
   // ---- recargas (bote e cuspe) ----
-  const bx = 480, by = 522;
+  // Ficam na direita: o meio de baixo e da barra de vida do chefe.
+  const bx = 900, by = 520;
   desenharRecarga(ctx, bx - 30, by, 'bote', 1 - limita((c.bote.recargaAte - c.tempo) / (D.config.cobra.bote.recarga * r.atributos.recargaBote), 0, 1), 'ESPACO');
   if (r.tem('cuspe')) {
     desenharRecarga(ctx, bx + 30, by, 'gota', 1 - limita((c.cuspeRecargaAte - c.tempo) / (D.config.cobra.cuspe.recarga * r.atributos.recargaCuspe), 0, 1), 'E');
